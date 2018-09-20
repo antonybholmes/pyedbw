@@ -98,7 +98,7 @@ def mapped_callback(key, person, user_type, id_map={}):
     else:
         count = 0
     
-    count = file
+    #count = file
     
     return JsonResponse([count], safe=False)    
 
