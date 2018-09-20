@@ -89,7 +89,7 @@ def mapped_callback(key, person, user_type, id_map={}):
         
     file = settings.DATA_DIR + sub_dir + 'mapped_reads_count.txt' #os.path.join(settings.SEQ_DIR, sub_dir) #str(id))
     
-    if os.path.isfile(file) 
+    if os.path.isfile(file):
         f = open(file, 'r')
         count = int(f.readline().strip())
         f.close()
