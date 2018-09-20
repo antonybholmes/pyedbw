@@ -87,7 +87,9 @@ def mapped_callback(key, person, user_type, id_map={}):
         
     sub_dir = sub_dirs[0].path
         
-    file = settings.DATA_DIR + sub_dir + 'mapped_reads_count.txt' #os.path.join(settings.SEQ_DIR, sub_dir) #str(id))
+    file = settings.DATA_DIR + sub_dir + '/mapped_reads_count.txt' #os.path.join(settings.SEQ_DIR, sub_dir) #str(id))
+    
+    
     
     if os.path.isfile(file):
         f = open(file, 'r')
