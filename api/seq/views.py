@@ -71,4 +71,4 @@ def counts(request):
     return auth.auth(request, counts_callback, id_map=id_map)
     
 def data_type(request):
-    return JsonResponse(['bc'])
+    return JsonResponse(['bc'], safe=False)
