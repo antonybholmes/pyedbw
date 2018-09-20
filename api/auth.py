@@ -1,7 +1,11 @@
 from api.persons.models import Person
 from django.http import JsonResponse
+import re
 
 EMPTY_JSON_LIST = JsonResponse([], safe=False)
+
+INT_REGEX = re.compile(r'^\d+$')
+FLOAT_REGEX = re.compile(r'^\d+\.\d+$')
 
 def empty_list_callback():
     """
@@ -116,6 +120,29 @@ def parse_ids(request, *args, **kwargs):
             
     return id_map
     
+def parse_arg(x):
+    """
+    Parse a string argument and attempt to turn numbers into actual
+    number types.
+    
+    Parameters
+    ----------
+    x : str
+        A string arg.
+    
+    Returns
+    -------
+    str, float, or int
+        x type converted.
+    """
+    
+    if x.replace('.', '').isdigit():
+        if x.isdigit():
+            x = int(x)
+        else:
+            x = float(x)
+                
+    return x
 
 def parse_params(request, *args, **kwargs):
     """
@@ -149,21 +176,38 @@ def parse_params(request, *args, **kwargs):
     
     for p in args:
         if isinstance(p, dict):
+            # If p is a dict then assume the value is the default value
+            # and the name is the key. Furthermore assume dict only
+            # contains one entry
             n = next(iter(p))
-        else:
+        elif isinstance(p, tuple):
+            # If p is a dict then assume the value is the default value
+            # and the name is the key. Furthermore assume dict only
+            # contains one entry
+            n = p[0]
+        elif isinstance(p, str):
             n = p
+        else:
+            # arg seems invalid so skip it
+            continue
             
         if n in request.GET:
             # if the sample id is present, pass it along
-            ids = request.GET.getlist(n)
+            values = [parse_arg(x) for x in request.GET.getlist(n)]
             
-            if len(ids) > 0:
+            if len(values) > 0:
                 # Only add non empty lists to dict
-                id_map[n] = ids
+                id_map[n] = values
         else:
             # If arg does not exist, supply a default
             if isinstance(p, dict):
+                # values of args are returned as a list even if there
+                # is only one arg
                 id_map[n] = [p[n]]
+            elif isinstance(p, tuple):
+                id_map[n] = [p[1]]
+            else:
+                pass
             
     return id_map
     

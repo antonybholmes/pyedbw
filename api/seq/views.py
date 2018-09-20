@@ -33,7 +33,7 @@ def counts_callback(key, person, user_type, id_map={}):
         
     genome = id_map['g'][0]
         
-    dir = os.path.join(settings.SEQ_DIR, id)
+    dir = os.path.join(settings.SEQ_DIR, str(id))
     
     if 'bw' in id_map:
         bin_width = id_map['bw'][0]
@@ -49,8 +49,8 @@ def counts_callback(key, person, user_type, id_map={}):
 def counts(request):
     id_map = {}
     
-    auth.parse_ids(request, {'bw' : 100}, id_map=id_map)
-    auth.parse_params(request, 'id', 'g', 'loc', id_map=id_map)
+    #auth.parse_ids(request, {'bw' : 100}, id_map=id_map)
+    auth.parse_params(request, 'id', 'g', 'loc', {'bw' : 100}, id_map=id_map)
     
     return counts_callback(None, None, None, id_map=id_map)
     
