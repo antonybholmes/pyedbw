@@ -7,4 +7,5 @@ from api.seq import views
 urlpatterns = [
     path('chipseq/', include('api.seq.chipseq.urls')),
     path('counts', views.counts, name='counts'),
+    path('type', views.data_type, name='type'),
 ]
