@@ -66,6 +66,6 @@ def counts(request):
     #auth.parse_ids(request, {'bw' : 100}, id_map=id_map)
     auth.parse_params(request, 'id', 'g', 'loc', {'bw' : 100}, id_map=id_map)
     
-    return counts_callback(None, None, None, id_map=id_map)
+    #return counts_callback(None, None, None, id_map=id_map)
     
-    #return auth.auth(request, counts_callback, id_map=id_map)
+    return auth.auth(request, counts_callback, id_map=id_map)
