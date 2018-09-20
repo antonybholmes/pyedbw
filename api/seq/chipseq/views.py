@@ -7,20 +7,5 @@ from api.persons.serializers import PersonSerializer
 from api import auth
 
 
-def peaks_callback(key, person, user_type, id_map={}):
-    if 'id' in id_map:
-        ids = id_map['id']
-        
-        samples = Person.objects.filter(id__in=ids)
-    else:
-        samples = Person.objects.all()
-    
-    serializer = PersonSerializer(samples, many=True, read_only=True)
-    
-    return JsonResponse(serializer.data, safe=False)    
-
-
 def peaks(request):
-    id_map = auth.parse_ids(request, 'id')
- 
-    return auth.auth(request, peaks_callback, id_map=id_map)
+    return JsonResponse([], safe=False)  
