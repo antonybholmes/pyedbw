@@ -47,7 +47,7 @@ def counts_callback(key, person, user_type, id_map={}):
         
     sub_dir = sub_dirs[0].path
         
-    dir = settings.SEQ_DIR + sub_dir #os.path.join(settings.SEQ_DIR, sub_dir) #str(id))
+    dir = settings.DATA_DIR + sub_dir #os.path.join(settings.SEQ_DIR, sub_dir) #str(id))
     
     if 'bw' in id_map:
         bin_width = id_map['bw'][0]
