@@ -44,6 +44,7 @@ class SampleFile(models.Model):
     class Meta:
         db_table = 'sample_files'
         
+        
 class SamplePerson(models.Model):
     sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
     person = models.ForeignKey(Person, on_delete=models.CASCADE)
@@ -51,7 +52,6 @@ class SamplePerson(models.Model):
 
     class Meta:
         db_table = 'sample_persons'
-        
         
         
 class SampleTag(models.Model):

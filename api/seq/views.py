@@ -14,6 +14,9 @@ import os
 import libseq
 import libdna
 
+from api.samples.models import SampleFile
+from api.vfs.models import VFSFile
+
 
 def counts_callback(key, person, user_type, id_map={}):
     if 'id' not in id_map:
@@ -32,8 +35,19 @@ def counts_callback(key, person, user_type, id_map={}):
         return JsonResponse([], safe=False)
         
     genome = id_map['g'][0]
+    
+    # Get the path location
+     
+    #sub_dirs = VFSFile.objects.filter(id=11244) #samplefile__sample__=id)
+    sub_dirs = VFSFile.objects.filter(samplefile__sample=id)
+    
+
+    if len(sub_dirs) == 0:
+        return JsonResponse([], safe=False)
         
-    dir = os.path.join(settings.SEQ_DIR, str(id))
+    sub_dir = sub_dirs[0].path
+        
+    dir = settings.SEQ_DIR + sub_dir #os.path.join(settings.SEQ_DIR, sub_dir) #str(id))
     
     if 'bw' in id_map:
         bin_width = id_map['bw'][0]
