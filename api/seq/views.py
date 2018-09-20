@@ -70,5 +70,45 @@ def counts(request):
     
     return auth.auth(request, counts_callback, id_map=id_map)
     
+    
+def mapped_callback(key, person, user_type, id_map={}):
+    if 'id' not in id_map:
+        return JsonResponse([], safe=False)
+        
+    id = id_map['id'][0]
+    
+    # Get the path location
+     
+    #sub_dirs = VFSFile.objects.filter(id=11244) #samplefile__sample__=id)
+    sub_dirs = VFSFile.objects.filter(samplefile__sample=id)
+    
+    if len(sub_dirs) == 0:
+        return JsonResponse([], safe=False)
+        
+    sub_dir = sub_dirs[0].path
+        
+    file = settings.DATA_DIR + sub_dir + 'mapped_reads_count.txt' #os.path.join(settings.SEQ_DIR, sub_dir) #str(id))
+    
+    if os.path.isfile(file) 
+        f = open(file, 'r')
+        count = int(f.readline().strip())
+        f.close()
+    else:
+        count = 0
+        
+    return JsonResponse([count], safe=False)    
+
+
+def mapped(request):
+    id_map = {}
+    
+    #auth.parse_ids(request, {'bw' : 100}, id_map=id_map)
+    auth.parse_params(request, 'id', id_map=id_map)
+    
+    #return counts_callback(None, None, None, id_map=id_map)
+    
+    return auth.auth(request, mapped_callback, id_map=id_map)
+        
+    
 def data_type(request):
     return JsonResponse(['bc'], safe=False)
