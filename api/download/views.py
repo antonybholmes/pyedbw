@@ -57,7 +57,7 @@ def get_file(id):
     # We do not use os.path.join because paths are stored in an
     # absolute form in the database so we just prefix with the real
     # path
-    path = os.path.join(settings.DATA_DIR, file.path)
+    path = settings.DATA_DIR + file.path #os.path.join(settings.DATA_DIR, file.path)
     
     return libfiles.FileRecord(id, file.name, path)
     
