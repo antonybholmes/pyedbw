@@ -158,7 +158,7 @@ def search_samples(tag, search_queue, max_count=100):
 
     for e in search_queue:
         if e.op == 'MATCH':
-            samples = Sample.objects.filter(tagsamplesearch__tag_keyword_search__keyword__name__contains=e.text)
+            samples = Sample.objects.filter(tagsamplesearch__tag_keyword_search__keyword__name__contains=e.text) \
                 .filter(tagsamplesearch__tag_keyword_search__tag__id=tag.id).distinct()
     
             stack.push(samples)
