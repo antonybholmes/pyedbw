@@ -8,6 +8,9 @@ from api.groups.models import Group
 class Sample(models.Model):
     experiment_id = models.IntegerField()
     name = models.CharField(max_length=255)
+    # We need this to link samples to groups so we can subsequently
+    # link persons to groups and transitively, samples to persons via
+    # the shared groups they belong to.
     groups = models.ManyToManyField(Group, through='GroupSample')
     organism_id = models.IntegerField()
     expression_type_id = models.IntegerField()
@@ -24,17 +27,6 @@ class GroupSample(models.Model):
 
     class Meta:
         db_table = 'groups_samples'
-        
-        
-class GroupSamplePerson(models.Model):
-    group = models.ForeignKey(Group, on_delete=models.CASCADE)
-    sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
-    person = models.ForeignKey(Person, on_delete=models.CASCADE)
-    created = models.DateTimeField()
-
-    class Meta:
-        db_table = 'groups_samples_persons'
-        
         
         
 class SampleFile(models.Model):

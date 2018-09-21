@@ -16,7 +16,10 @@ def sample_callback(key, person, user_type, id_map={}):
     if 'sample' in id_map:
         ids = id_map['sample']
         
-        samples = Sample.objects.filter(id__in=ids)
+        if user_type != 'Normal':
+            samples = Sample.objects.filter(id__in=ids)
+        else:
+            samples = Sample.objects.filter(groups__person__id=person.id, id__in=ids)
     else:
         # return all samples
         
@@ -82,6 +85,7 @@ def tags_callback(key, person, user_type, id_map={}):
     
     return JsonResponse(ret, safe=False)
 
+
 def append_tags(sample_tags, ret):
     for sample_tag in sample_tags:
         ret.append({'id' : sample_tag.tag.id, 'v' : sample_tag.value})
@@ -105,7 +109,6 @@ def geo(request):
     return auth.auth(request, geo_callback, id_map=id_map)
     
 
-
 def file_callback(key, person, user_type, id_map={}):
     files = VFSFile.objects.filter(samplefile__sample__in=id_map['sample'])
     
@@ -118,7 +121,6 @@ def files(request):
     id_map = auth.parse_ids(request, 'sample')
     
     return auth.auth(request, file_callback, id_map=id_map)
-    
     
     
 def search_callback(key, person, user_type, id_map={}):
@@ -156,7 +158,8 @@ def search_samples(tag, search_queue, max_count=100):
 
     for e in search_queue:
         if e.op == 'MATCH':
-            samples = Sample.objects.filter(tagsamplesearch__tag_keyword_search__keyword__name__contains=e.text).filter(tagsamplesearch__tag_keyword_search__tag__id=tag.id).distinct()
+            samples = Sample.objects.filter(tagsamplesearch__tag_keyword_search__keyword__name__contains=e.text)
+                .filter(tagsamplesearch__tag_keyword_search__tag__id=tag.id).distinct()
     
             stack.push(samples)
         elif e.op == 'AND':
