@@ -19,7 +19,7 @@ from api.samples.models import SampleFile
 from api.vfs.models import VFSFile
 
 
-def counts_callback(key, person, user_type, id_map={}):
+def counts_callback(key, person, user_type, id_map=None):
     if 'id' not in id_map:
         return JsonResponse(['id'], safe=False)
         
@@ -61,7 +61,8 @@ def counts_callback(key, person, user_type, id_map={}):
 
 
 def counts(request):
-    id_map = auth.parse_params(request, {'id':-1, 'g':'grch38', 'chr':'chr3', 's':187721377, 'e':187736497, 'bw':100})
+    id_map = auth.parse_params(request,
+        {'id':0, 'g':'grch38', 'chr':'chr3', 's':187721377, 'e':187736497, 'bw':100})
     
     #return counts_callback(None, None, None, id_map=id_map)
     
