@@ -13,6 +13,7 @@ import sys
 import os
 import libseq
 import libdna
+import libhttp
 import libhttpdna
 
 from api.samples.models import SampleFile
@@ -61,8 +62,8 @@ def counts_callback(key, person, user_type, id_map=None):
 
 
 def counts(request):
-    id_map = auth.parse_params(request,
-        {'id':0, 'g':'grch38', 'chr':'chr3', 's':187721377, 'e':187736497, 'bw':100})
+    id_map = libhttp.parse_params(request,
+        {'id':-1, 'g':'grch38', 'chr':'chr3', 's':187721377, 'e':187736497, 'bw':100})
     
     #return counts_callback(None, None, None, id_map=id_map)
     
@@ -105,7 +106,7 @@ def mapped(request):
     id_map = {}
     
     #auth.parse_ids(request, {'bw' : 100}, id_map=id_map)
-    auth.parse_params(request, 'id', id_map=id_map)
+    libhttp.parse_params(request, {'id':-1}, id_map=id_map)
     
     #return counts_callback(None, None, None, id_map=id_map)
     
