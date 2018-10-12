@@ -179,33 +179,33 @@ def parse_params(request, *args, **kwargs):
             # If p is a dict then assume the value is the default value
             # and the name is the key. Furthermore assume dict only
             # contains one entry
-            n = next(iter(p))
+            name = next(iter(p))
         elif isinstance(p, tuple):
             # If p is a dict then assume the value is the default value
             # and the name is the key. Furthermore assume dict only
             # contains one entry
-            n = p[0]
+            name = p[0]
         elif isinstance(p, str):
-            n = p
+            name = p
         else:
             # arg seems invalid so skip it
             continue
             
-        if n in request.GET:
+        if name in request.GET:
             # if the sample id is present, pass it along
-            values = [parse_arg(x) for x in request.GET.getlist(n)]
+            values = [parse_arg(x) for x in request.GET.getlist(name)]
             
             if len(values) > 0:
                 # Only add non empty lists to dict
-                id_map[n] = values
+                id_map[name] = values
         else:
             # If arg does not exist, supply a default
             if isinstance(p, dict):
                 # values of args are returned as a list even if there
                 # is only one arg
-                id_map[n] = [p[n]]
+                id_map[name] = [p[name]]
             elif isinstance(p, tuple):
-                id_map[n] = [p[1]]
+                id_map[name] = [p[1]]
             else:
                 pass
             
