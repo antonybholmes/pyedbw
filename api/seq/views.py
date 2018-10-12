@@ -26,7 +26,7 @@ def counts_callback(key, person, user_type, id_map=None):
     id = id_map['id'][0]
     
     if 'g' not in id_map:
-        return JsonResponse(['g'], safe=False)
+        return JsonResponse(['g', ';'.join(sorted(id_map))], safe=False)
     
     genome = id_map['g'][0]
     
