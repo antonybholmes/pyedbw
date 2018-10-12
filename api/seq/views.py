@@ -21,19 +21,19 @@ from api.vfs.models import VFSFile
 
 def counts_callback(key, person, user_type, id_map={}):
     if 'id' not in id_map:
-        return JsonResponse([], safe=False)
+        return JsonResponse(['id'], safe=False)
         
     id = id_map['id'][0]
     
     if 'g' not in id_map:
-        return JsonResponse([], safe=False)
+        return JsonResponse(['g'], safe=False)
     
     genome = id_map['g'][0]
     
     loc = libhttpdna.get_loc_from_params(id_map)
     
     if loc is None:
-        return JsonResponse([], safe=False)
+        return JsonResponse(['loc'], safe=False)
         
     
     # Get the path location
@@ -61,7 +61,7 @@ def counts_callback(key, person, user_type, id_map={}):
 
 
 def counts(request):
-    id_map = auth.parse_params(request, {'id':-1, 'g':'grch38', 'chr':'chr3', 's':187721377, 'e':187736497, 'bw' : 100})
+    id_map = auth.parse_params(request, {'id':-1, 'g':'grch38', 'chr':'chr3', 's':187721377, 'e':187736497, 'bw':100})
     
     #return counts_callback(None, None, None, id_map=id_map)
     
