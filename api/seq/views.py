@@ -58,7 +58,7 @@ def counts_callback(key, person, user_type, id_map=None):
     bcr = libseq.BinCountReader(dir, genome=genome)
     locations = bcr.get_counts(loc, bin_width=bin_width)
     
-    return JsonResponse([{'id' : id, 'l' : loc.__str__(), 'bw' : bin_width, 'c' : locations}], safe=False)    
+    return JsonResponse([{'id' : id, 'l' : loc.__str__(), 'bw' : bin_width, 'c' : locations.tolist()}], safe=False)    
 
 
 def counts(request):
