@@ -118,7 +118,7 @@ def mapped_callback(key, person, user_type, id_map={}):
 
 
 def mapped(request):
-    id_map = libhttp.parse_params(request, {'id':-1, bw':-1, 'g':'grch38'})
+    id_map = libhttp.parse_params(request, {'id':-1, 'bw':-1, 'g':'grch38'})
     
     return auth.auth(request, mapped_callback, id_map=id_map)
         
