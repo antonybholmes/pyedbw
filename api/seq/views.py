@@ -85,16 +85,16 @@ def mapped_callback(key, person, user_type, id_map={}):
         
     genome = id_map['g'][0]
     
-    bin_width = id_map['bw'][0]
+    #bin_width = id_map['bw'][0]
         
-    if bin_width not in libseq.POWER:
-        return JsonResponse(['p ' + str(bin_width)], safe=False)
+    #if bin_width not in libseq.POWER:
+    #    return JsonResponse(['p ' + str(bin_width)], safe=False)
         
     power = libseq.POWER[bin_width]
         
     sub_dir = sub_dirs[0].path
         
-    file = settings.DATA_DIR + sub_dir + '/counts.{}.{}bw.bc'.format(genome, power) #'/mapped_reads_count.txt' #os.path.join(settings.SEQ_DIR, sub_dir) #str(id))
+    file = settings.DATA_DIR + sub_dir + '/reads.{}.bc'.format(genome) #'/mapped_reads_count.txt' #os.path.join(settings.SEQ_DIR, sub_dir) #str(id))
     
     
     
@@ -114,7 +114,7 @@ def mapped_callback(key, person, user_type, id_map={}):
 
 
 def mapped(request):
-    id_map = libhttp.parse_params(request, {'id':-1, 'bw':-1, 'g':'grch38'})
+    id_map = libhttp.parse_params(request, {'id':-1, 'g':'grch38'})
     
     return auth.auth(request, mapped_callback, id_map=id_map)
         
