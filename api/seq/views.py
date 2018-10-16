@@ -103,7 +103,7 @@ def mapped_callback(key, person, user_type, id_map={}):
         #count = int(f.readline().strip())
         #f.close()
         f = open(file, 'rb')
-        count = struct.unpack('<I', f.read(4))[0] #int(f.readline().strip())
+        count = struct.unpack('>I', f.read(4))[0] #int(f.readline().strip())
         f.close()
     else:
         count = 0
