@@ -85,16 +85,12 @@ def mapped_callback(key, person, user_type, id_map={}):
         
     genome = id_map['g'][0]
     
-    power = id_map['p'][0]
-    
-    if power == -1:
-        bin_width = id_map['bw'][0]
+    bin_width = id_map['bw'][0]
         
-        if bin_width in libseq.POWER:
-            power = libseq.POWER[bin_width]
-            
-    if power == -1:
-        return JsonResponse(['p ' + str(power)], safe=False)
+    if bin_width not in libseq.POWER:
+        return JsonResponse(['p ' + str(bin_width)], safe=False)
+        
+    power = libseq.POWER[bin_width]
         
     sub_dir = sub_dirs[0].path
         
