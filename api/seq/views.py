@@ -90,7 +90,7 @@ def mapped_callback(key, person, user_type, id_map={}):
     #if bin_width not in libseq.POWER:
     #    return JsonResponse(['p ' + str(bin_width)], safe=False)
         
-    power = libseq.POWER[bin_width]
+    #power = libseq.POWER[bin_width]
         
     sub_dir = sub_dirs[0].path
         
