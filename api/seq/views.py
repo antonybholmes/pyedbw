@@ -72,7 +72,7 @@ def counts(request):
     
 def mapped_callback(key, person, user_type, id_map={}):
     if 'id' not in id_map:
-        return JsonResponse([], safe=False)
+        return JsonResponse(['Invalid ID'], safe=False)
         
     id = id_map['id'][0]
     
@@ -81,7 +81,7 @@ def mapped_callback(key, person, user_type, id_map={}):
     sub_dirs = VFSFile.objects.filter(samplefile__sample=id)
     
     if len(sub_dirs) == 0:
-        return JsonResponse([], safe=False)
+        return JsonResponse(['No dirs'], safe=False)
         
     genome = id_map['g'][0]
     
@@ -94,7 +94,7 @@ def mapped_callback(key, person, user_type, id_map={}):
             power = libseq.POWER[bin_width]
             
     if power == -1:
-        return JsonResponse([], safe=False)
+        return JsonResponse(['p ' + str(power)], safe=False)
         
     sub_dir = sub_dirs[0].path
         
