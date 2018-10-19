@@ -21,13 +21,7 @@ from api.vfs.models import VFSFile
 
 
 def counts_callback(key, person, user_type, id_map=None):
-    if 'id' not in id_map:
-        return JsonResponse([], safe=False)
-        
     id = id_map['id'][0]
-    
-    if 'g' not in id_map:
-        return JsonResponse([], safe=False)
     
     genome = id_map['g'][0]
     
@@ -35,7 +29,8 @@ def counts_callback(key, person, user_type, id_map=None):
     
     if loc is None:
         return JsonResponse([], safe=False)
-        
+    
+    mode = id_map['m'][0]    
     
     # Get the path location
      
@@ -55,15 +50,24 @@ def counts_callback(key, person, user_type, id_map=None):
     else:
         bin_width = 100
         
-    bcr = libseq.BinCountReader(dir, genome=genome)
+    bcr = libseq.BinCountReader(dir, genome=genome, mode=mode)
     locations = bcr.get_counts(loc, bin_width=bin_width)
     
-    return JsonResponse([{'id' : id, 'l' : loc.__str__(), 'bw' : bin_width, 'c' : locations.tolist()}], safe=False)    
+    return JsonResponse([{'id':id, 
+        'l':loc.__str__(), 
+        'bw':bin_width, 
+        'mode':mode, 
+        'c':locations.tolist()}], safe=False)    
 
 
 def counts(request):
-    id_map = libhttp.parse_params(request,
-        {'id':-1, 'g':'grch38', 'chr':'chr3', 's':187721377, 'e':187736497, 'bw':100})
+    id_map = libhttp.parse_params(request, {'id':-1, 
+        'g':'grch38', 
+        'chr':'chr3', 
+        's':187721377, 
+        'e':187736497, 
+        'bw':100,
+        'm':'count'})
     
     #return counts_callback(None, None, None, id_map=id_map)
     
@@ -71,9 +75,6 @@ def counts(request):
     
     
 def mapped_callback(key, person, user_type, id_map={}):
-    if 'id' not in id_map:
-        return JsonResponse(['Invalid ID'], safe=False)
-        
     id = id_map['id'][0]
     
     # Get the path location
