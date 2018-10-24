@@ -23,7 +23,8 @@ def tracks_callback(key, person, user_type, id_map={}):
         output = []
         
         for track in tracks:
-            l = 'track type=bigWig name="{}" description="{}" visibility="full" bigDataUrl={}'.format(track.name, track.name, track.url)
+            name = track.sample.name
+            l = 'track type=bigWig name="{}" description="{}" visibility="full" bigDataUrl={}'.format(name, name, track.url)
             output.append(l)
             
         return HttpResponse("\n".join(output), content_type='text/plain')
