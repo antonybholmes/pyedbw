@@ -11,6 +11,7 @@ urlpatterns = [
     path('vfs/', include('api.vfs.urls')),
     path('download/', include('api.download.urls')),
     path('seq/', include('api.seq.urls')),
+    path('ucsc/', include('api.ucsc.urls')),
     path('groups/', include('api.groups.urls')),
     path('account/', include('api.account.urls')),
     path('admin/', include('api.admin.urls')),
