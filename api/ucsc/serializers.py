@@ -11,5 +11,5 @@ class TrackSerializer(serializers.ModelSerializer):
     
     class Meta:
         model = Track
-        fields = ('id', 'u')
+        fields = ('u')
         

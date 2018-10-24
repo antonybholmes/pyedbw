@@ -10,6 +10,8 @@ from api import auth
 def tracks_callback(key, person, user_type, id_map={}):
     ids = ids_map[id]
     
+    print(ids)
+    
     tracks = Track.objects.filter(id__in=ids)
     
     serializer = TrackSerializer(tracks, many=True, read_only=True)
