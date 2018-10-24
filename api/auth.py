@@ -39,6 +39,7 @@ def auth(request, callback, error_callback=empty_list_callback, id_map=None, che
     """
     
     if 'key' not in request.GET:
+        print('no key')
         return error_callback()
     
     key = request.GET['key']
@@ -67,7 +68,7 @@ def auth(request, callback, error_callback=empty_list_callback, id_map=None, che
         return callback(key, persons[0], user_type, id_map=id_map)
     else:
         # return an empty response otherwise
-        #print('invalid person')
+        print('invalid person')
         return error_callback()
 
 

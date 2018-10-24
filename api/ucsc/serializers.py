@@ -6,10 +6,11 @@ class TrackSerializer(serializers.ModelSerializer):
     Serialize sample to JSON
     """
     
-    u = serializers.CharField(source='url')
-    d = serializers.DateTimeField('%Y-%m-%d', source='created')
-    
+    #id = serializers.IntegerField()
+    t = serializers.CharField(source='track_type.name')
+    url = serializers.CharField()
+
     class Meta:
         model = Track
-        fields = ('u')
+        fields = ('t', 'url',)
         
