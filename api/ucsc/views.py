@@ -15,7 +15,7 @@ def hex_to_rgb(value):
   
 def tracks_callback(key, person, user_type, id_map={}):
     ids = id_map['id']
-    colors = [hex_to_rgb(c) for c in id_map['c']]
+    colors = id_map['c'] #[hex_to_rgb(c) for c in id_map['c']]
     
     while len(colors) < len(ids):
         colors.append(colors[0])
