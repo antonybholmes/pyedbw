@@ -42,6 +42,6 @@ def tracks_callback(key, person, user_type, id_map={}):
         return HttpResponse("\n".join(output), content_type='text/plain')
 
 def tracks(request):
-    id_map = libhttp.parse_params(request, {'id':-1, 'key':'', 'mode':'text', 'c':'#FF0000'})
+    id_map = libhttp.parse_params(request, {'id':-1, 'key':'', 'mode':'text', 'c':'255,0,0'})
  
     return auth.auth(request, tracks_callback, id_map=id_map)
