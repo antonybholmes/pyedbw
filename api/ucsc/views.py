@@ -36,7 +36,7 @@ def tracks_callback(key, person, user_type, id_map={}):
             color = colors[i]
            
             name = track.sample.name
-            l = 'track type=bigWig name="{}" description="{}" visibility="full" color={}, bigDataUrl={}'.format(name, name, color, track.url)
+            l = 'track type=bigWig name="{}" description="{}" visibility="full" color={} bigDataUrl={}'.format(name, name, color, track.url)
             output.append(l)
             
         return HttpResponse("\n".join(output), content_type='text/plain')
