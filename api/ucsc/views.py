@@ -18,7 +18,8 @@ def hex_to_rgb(value):
 def tracks_callback(key, person, user_type, id_map={}):
     ids = []
     colors = []
-
+    tracks = []
+    
     for id in id_map['id']:
         tokens = id.split(":")
         
@@ -31,10 +32,11 @@ def tracks_callback(key, person, user_type, id_map={}):
             
         ids.append(id)
         colors.append(color)
+        tracks.append(Track.objects.get(sample_id=id))
     
     mode = id_map['mode'][0]
     
-    tracks = Track.objects.filter(sample_id__in=ids) #Track.objects.all() #(id__in=ids)
+    #tracks = Track.objects.filter(sample_id__in=ids) #Track.objects.all() #(id__in=ids)
     
     if (mode == 'json'):
         serializer = TrackSerializer(tracks, many=True, read_only=True)
