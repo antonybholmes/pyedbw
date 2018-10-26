@@ -7,6 +7,8 @@ from api.ucsc.models import Track
 from api.ucsc.serializers import TrackSerializer
 from api import auth
 
+DEFAULT_COLOR = '255,0,0'
+
 def hex_to_rgb(value):
     value = value.lstrip('#')
     #return tuple(int(value[i:(i + 2)], 16) for i in range(0, 6, 2))
@@ -14,11 +16,21 @@ def hex_to_rgb(value):
     
   
 def tracks_callback(key, person, user_type, id_map={}):
-    ids = id_map['id']
-    colors = id_map['c'] #[hex_to_rgb(c) for c in id_map['c']]
-    
-    while len(colors) < len(ids):
-        colors.append(colors[0])
+    ids = []
+    colors = []
+
+    for id in id_map['id']:
+        tokens = id.split(":")
+        
+        id = int(tokens[0])
+        
+        if len(tokens) > 1:
+            color = tokens[1]
+        else:
+            color = DEFAULT_COLOR
+            
+        ids.append(id)
+        colors.append(color)
     
     mode = id_map['mode'][0]
     
@@ -42,6 +54,6 @@ def tracks_callback(key, person, user_type, id_map={}):
         return HttpResponse("\n".join(output), content_type='text/plain')
 
 def tracks(request):
-    id_map = libhttp.parse_params(request, {'id':-1, 'key':'', 'mode':'text', 'c':'255,0,0'})
+    id_map = libhttp.parse_params(request, {'id':'-1:255,0,0', 'key':'', 'mode':'text'})
  
     return auth.auth(request, tracks_callback, id_map=id_map)
