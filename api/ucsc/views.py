@@ -32,6 +32,8 @@ def tracks_callback(key, person, user_type, id_map={}):
             
         ids.append(id)
         colors.append(color)
+        # get each track separately so that the sample and color stay
+        # matched in order. Using __in does not guarantee result order.
         tracks.append(Track.objects.get(sample_id=id))
     
     mode = id_map['mode'][0]
