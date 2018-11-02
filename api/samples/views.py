@@ -148,7 +148,7 @@ def search_callback(key, person, user_type, id_map={}):
     return JsonResponse(serializer.data, safe=False)
 
 
-def search_samples(tag, search_queue, max_count=1000):
+def search_samples(tag, search_queue, max_count=100):
     if len(search_queue) == 0:
         # If there is no query, default to return 100 results ordered 
         # by name
