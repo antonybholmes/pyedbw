@@ -143,6 +143,9 @@ def search_callback(key, person, user_type, id_map={}):
     if 'type' in id_map:
         samples = samples.filter(expression_type_id__in=id_map['type'])
     
+    if 'person' in id_map:
+        samples = samples.filter(persons__in=id_map['person'])
+    
     serializer = SampleSerializer(samples, many=True, read_only=True)
     
     return JsonResponse(serializer.data, safe=False)
@@ -152,7 +155,6 @@ def search_samples(tag, search_queue, max_count=100):
     if len(search_queue) == 0:
         # If there is no query, default to return 100 results ordered 
         # by name
-        print('here')
         return Sample.objects.order_by('name')[:max_count]
 
     stack = libcollections.Stack()
@@ -174,7 +176,7 @@ def search_samples(tag, search_queue, max_count=100):
 
 
 def search(request):
-    id_map = auth.parse_params(request, 'q', {'tag':'/All'}, 'type')
+    id_map = auth.parse_params(request, 'q', {'tag':'/All'}, 'type', 'person')
     
     return auth.auth(request, search_callback, id_map=id_map)
     

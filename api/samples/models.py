@@ -12,6 +12,7 @@ class Sample(models.Model):
     # link persons to groups and transitively, samples to persons via
     # the shared groups they belong to.
     groups = models.ManyToManyField(Group, through='GroupSample')
+    persons = models.ManyToManyField(Person, through='SamplePerson')
     organism_id = models.IntegerField()
     expression_type_id = models.IntegerField()
     created = models.DateTimeField('%Y-%m-%d')
