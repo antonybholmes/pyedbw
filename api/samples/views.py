@@ -12,7 +12,7 @@ from api.samples.serializers import SampleSerializer, SampleTagSerializer
 from api import auth, libsearch, libcollections
 
   
-def sample_callback(key, person, user_type, id_map={}):
+def _sample_callback(key, person, user_type, id_map={}):
     if 'sample' in id_map:
         ids = id_map['sample']
         
@@ -39,10 +39,10 @@ def sample_callback(key, person, user_type, id_map={}):
 def samples(request):
     id_map = auth.parse_ids(request, 'sample')
  
-    return auth.auth(request, sample_callback, id_map=id_map)
+    return auth.auth(request, _sample_callback, id_map=id_map)
 
 
-def persons_callback(key, person, user_type, id_map={}):
+def _persons_callback(key, person, user_type, id_map={}):
     persons = Person.objects.filter(sampleperson__sample__in=id_map['sample'])
     
     serializer = PersonSerializer(persons, many=True, read_only=True)
@@ -53,31 +53,30 @@ def persons_callback(key, person, user_type, id_map={}):
 def persons(request):
     id_map = auth.parse_ids(request, 'sample')
     
-    return auth.auth(request, persons_callback, id_map=id_map, check_for={'sample'})
+    return auth.auth(request, _persons_callback, id_map=id_map, check_for={'sample'})
     
     
-def tags_callback(key, person, user_type, id_map={}):
-    
+def _tags_callback(key, person, user_type, id_map={}):
     ret = []
     
     if 'tag' in id_map:
         tags = SampleTag.objects.filter(sample__in=id_map['sample'], tag__in=id_map['tag'])
-        append_tags(tags, ret)
+        _append_tags(tags, ret)
             
         tags = SampleIntTag.objects.filter(sample__in=id_map['sample'], tag__in=id_map['tag'])
-        append_tags(tags, ret)
+        _append_tags(tags, ret)
         
         tags = SampleFloatTag.objects.filter(sample__in=id_map['sample'], tag__in=id_map['tag'])
-        append_tags(tags, ret)
+        _append_tags(tags, ret)
     else:
         tags = SampleTag.objects.filter(sample__in=id_map['sample'])
-        append_tags(tags, ret)   
+        _append_tags(tags, ret)   
         
         tags = SampleIntTag.objects.filter(sample__in=id_map['sample'])
-        append_tags(tags, ret)
+        _append_tags(tags, ret)
         
         tags = SampleFloatTag.objects.filter(sample__in=id_map['sample'])
-        append_tags(tags, ret)
+        _append_tags(tags, ret)
     
     # Rather than using a serializer, here we combine records into
     # a list of dicts and use that to generate JSON directly
@@ -86,7 +85,7 @@ def tags_callback(key, person, user_type, id_map={}):
     return JsonResponse(ret, safe=False)
 
 
-def append_tags(sample_tags, ret):
+def _append_tags(sample_tags, ret):
     for sample_tag in sample_tags:
         ret.append({'id' : sample_tag.tag.id, 'v' : sample_tag.value})
 
@@ -96,7 +95,7 @@ def tags(request):
     auth.parse_ids(request, 'sample', id_map=id_map)
     auth.parse_ids(request, 'tag', id_map=id_map)
     
-    return auth.auth(request, tags_callback, id_map=id_map, check_for={'sample'})
+    return auth.auth(request, _tags_callback, id_map=id_map, check_for={'sample'})
        
     
 def geo_callback(key, person, user_type, id_map={}):
@@ -109,7 +108,7 @@ def geo(request):
     return auth.auth(request, geo_callback, id_map=id_map)
     
 
-def file_callback(key, person, user_type, id_map={}):
+def _file_callback(key, person, user_type, id_map={}):
     files = VFSFile.objects.filter(samplefile__sample__in=id_map['sample'])
     
     serializer = VFSFileSerializer(files, many=True, read_only=True)
@@ -120,10 +119,10 @@ def file_callback(key, person, user_type, id_map={}):
 def files(request):
     id_map = auth.parse_ids(request, 'sample')
     
-    return auth.auth(request, file_callback, id_map=id_map)
+    return auth.auth(request, _file_callback, id_map=id_map)
     
     
-def search_callback(key, person, user_type, id_map={}):
+def _search_callback(key, person, user_type, id_map={}):
     # The search query
     
     if 'q' in id_map:
@@ -138,7 +137,7 @@ def search_callback(key, person, user_type, id_map={}):
     
     #samples = Sample.objects.filter(tagsamplesearch__tag_keyword_search__keyword__name__contains=q).filter(tagsamplesearch__tag_keyword_search__tag__id=tag.id).distinct()
     
-    samples = search_samples(tag, search_queue)
+    samples = _search_samples(tag, search_queue)
     
     if 'type' in id_map:
         samples = samples.filter(expression_type_id__in=id_map['type'])
@@ -146,16 +145,22 @@ def search_callback(key, person, user_type, id_map={}):
     if 'person' in id_map:
         samples = samples.filter(persons__in=id_map['person'])
     
+    # filter by size
+    
+    max_count = id_map['max_count'][0]
+    
+    samples = samples[:max_count]
+    
     serializer = SampleSerializer(samples, many=True, read_only=True)
     
     return JsonResponse(serializer.data, safe=False)
 
 
-def search_samples(tag, search_queue, max_count=100):
+def _search_samples(tag, search_queue):
     if len(search_queue) == 0:
         # If there is no query, default to return 100 results ordered 
         # by name
-        return Sample.objects.order_by('name')[:max_count]
+        return Sample.objects.order_by('name')
 
     stack = libcollections.Stack()
 
@@ -176,7 +181,7 @@ def search_samples(tag, search_queue, max_count=100):
 
 
 def search(request):
-    id_map = auth.parse_params(request, 'q', {'tag':'/All'}, 'type', 'person')
+    id_map = auth.parse_params(request, 'q', {'tag':'/All'}, 'type', 'person', {'max_count':100})
     
-    return auth.auth(request, search_callback, id_map=id_map)
+    return auth.auth(request, _search_callback, id_map=id_map)
     
