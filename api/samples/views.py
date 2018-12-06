@@ -10,6 +10,7 @@ from api.vfs.serializers import VFSFileSerializer
 from api.samples.models import Sample, TagSampleSearch, TagKeywordSearch, SampleFile, SampleTag, SampleIntTag, SampleFloatTag
 from api.samples.serializers import SampleSerializer, SampleTagSerializer
 from api import auth, libsearch, libcollections
+import libhttp
 
   
 def _sample_callback(key, person, user_type, id_map={}):
@@ -125,15 +126,11 @@ def files(request):
 def _search_callback(key, person, user_type, id_map={}):
     # The search query
     
-    if 'q' in id_map:
-        # If query exists use it.
-        q = id_map['q'][0]
-    else:
-        q = ''
-    
+    q = id_map['q']
+
     search_queue = libsearch.parse_query(q)
     
-    tag = Tag.objects.get(name=id_map['tag'][0])
+    tag = Tag.objects.get(name=id_map['tag'])
     
     #samples = Sample.objects.filter(tagsamplesearch__tag_keyword_search__keyword__name__contains=q).filter(tagsamplesearch__tag_keyword_search__tag__id=tag.id).distinct()
     
@@ -147,7 +144,7 @@ def _search_callback(key, person, user_type, id_map={}):
     
     # filter by size
     
-    max_count = id_map['max_count'][0]
+    max_count = id_map['max_count']
     
     samples = samples[:max_count]
     
@@ -181,7 +178,16 @@ def _search_samples(tag, search_queue):
 
 
 def search(request):
-    id_map = auth.parse_params(request, 'q', {'tag':'/All'}, 'type', 'person', {'max_count':100})
+    id_map = libhttp.ArgParser() \
+        .add('key') \
+        .add('q', '') \
+        .add('tag', '/All') \
+        .add('type', arg_type=str, multiple=True) \
+        .add('person', None, int, multiple=True) \
+        .add('max_count', 100) \
+        .parse(request)
+    
+    print(id_map)
     
     return auth.auth(request, _search_callback, id_map=id_map)
     

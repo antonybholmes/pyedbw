@@ -10,13 +10,13 @@ class SampleSerializer(serializers.ModelSerializer):
     n = serializers.CharField(source='name')
     o = serializers.IntegerField(source='organism_id')
     t = serializers.IntegerField(source='expression_type_id')
-    persons = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
+    #persons = serializers.PrimaryKeyRelatedField(many=True, read_only=True)
     
     d = serializers.DateTimeField('%Y-%m-%d', source='created')
     
     class Meta:
         model = Sample
-        fields = ('id', 'e', 'n', 'o', 't', 'persons', 'd')
+        fields = ('id', 'e', 'n', 'o', 't', 'd')
         
         
 class SampleTagSerializer(serializers.ModelSerializer):

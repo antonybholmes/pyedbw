@@ -38,6 +38,8 @@ def auth(request, callback, error_callback=empty_list_callback, id_map=None, che
         JSON string of results
     """
     
+    
+    
     if 'key' not in request.GET:
         print('no key')
         return error_callback()
@@ -49,14 +51,22 @@ def auth(request, callback, error_callback=empty_list_callback, id_map=None, che
             if id not in id_map:
                 print(id, 'not found in check_for')
                 return error_callback()
-     
-    for n in id_map:
-        for id in id_map[n]:
-            # test all int ids for being valid, ignore strings etc
+    
+    for name, values in id_map.items():
+        if isinstance(values, list):
+            for id in values:
+                # test all int ids for being valid, ignore strings etc
+                if pkey_only and isinstance(id, int) and id < 1:
+                    print(id, 'is invalid int')
+                    return error_callback()
+        elif isinstance(values, int):
+            id = values
             if pkey_only and isinstance(id, int) and id < 1:
-                #print(id, 'is invalid int')
                 return error_callback()
+        else:
+            pass
  
+    
     
     persons = Person.objects.filter(api_key=key)
     person = persons[0]
@@ -211,8 +221,8 @@ def parse_params(request, *args, **kwargs):
                 pass
             
     return id_map
-    
-    
+
+
 def param_str_to_int(request, name):
     """
     Converts multiple url parameters with the same name to a list of

@@ -11,6 +11,10 @@ class Person(models.Model):
     api_key = models.CharField(max_length=64)
     created = models.DateTimeField()
 
+    @property
+    def name(self):
+        return self.first_name + " " + self.last_name
+
     class Meta:
         db_table = 'persons'
 
