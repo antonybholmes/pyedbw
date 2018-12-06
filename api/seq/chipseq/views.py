@@ -6,6 +6,7 @@ from api.persons.models import Person
 from api.persons.serializers import PersonSerializer
 from api import auth
 import libhttp
+import libhttpdna
 
 from api.samples.models import SampleFile
 
