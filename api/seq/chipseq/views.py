@@ -5,6 +5,7 @@ from django.core import serializers
 from api.persons.models import Person
 from api.persons.serializers import PersonSerializer
 from api import auth
+import libhttp
 
 from api.samples.models import SampleFile
 
@@ -52,13 +53,15 @@ def peaks_callback(key, person, user_type, id_map=None):
 
 
 def peaks(request):
-    id_map = libhttp.parse_params(request, {'id':-1, 
-        'g':'hg19', 
-        'chr':'chr3', 
-        's':187721377, 
-        'e':187736497, 
-        'bw':1000,
-        'm':'count'})
+    id_map = libhttp.ArgParser() \
+        .add('id',-1) \
+        .add('g','hg19') \
+        .add('chr','chr3') \
+        .add('s',187721377) \
+        .add('e',187736497) \
+        .add('bw',1000) \
+        .add('m','count') \
+        .parse(request)
     
     #return counts_callback(None, None, None, id_map=id_map)
     
