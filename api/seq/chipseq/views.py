@@ -64,6 +64,6 @@ def peaks(request):
         .add('m','count') \
         .parse(request)
     
-    #return counts_callback(None, None, None, id_map=id_map)
-    
-    return auth.auth(request, peaks_callback, id_map=id_map)
+    return JsonResponse([], safe=False)
+     
+    #return auth.auth(request, peaks_callback, id_map=id_map)
