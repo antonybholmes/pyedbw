@@ -11,16 +11,16 @@ from api.samples.models import SampleFile
 
 
 def peaks_callback(key, person, user_type, id_map=None):
-    id = id_map['id'][0]
+    id = id_map['id']
     
-    genome = id_map['g'][0]
+    genome = id_map['g']
     
     loc = libhttpdna.get_loc_from_params(id_map)
     
     if loc is None:
         return JsonResponse([], safe=False)
     
-    mode = id_map['m'][0]    
+    mode = id_map['m']
     
     # Get the path location
      
@@ -37,7 +37,7 @@ def peaks_callback(key, person, user_type, id_map=None):
     
     
     if 'bw' in id_map:
-        bin_width = id_map['bw'][0]
+        bin_width = id_map['bw']
     else:
         bin_width = 1000
         
