@@ -7,8 +7,13 @@ from api.groups.serializers import GroupSerializer
 from api import auth
 
 
-def groups_callback(key, person, user_type, id_map={}):
-    serializer = GroupSerializer(Group.objects.filter(groupperson__person_id=person.id), many=True, read_only=True)
+def _groups_callback(key, person, user_type, id_map={}):
+    if user_type != 'Normal':
+        groups = Group.objects.all().order_by('name')
+    else:
+        groups = Group.objects.filter(groupperson__person_id=person.id).order_by('name')
+    
+    serializer = GroupSerializer(groups, many=True, read_only=True)
     
     return JsonResponse(serializer.data, safe=False)
     
@@ -16,4 +21,4 @@ def groups_callback(key, person, user_type, id_map={}):
 def groups(request):
     id_map = {}
     
-    return auth.auth(request, groups_callback, id_map=id_map)
+    return auth.auth(request, _groups_callback, id_map=id_map)
