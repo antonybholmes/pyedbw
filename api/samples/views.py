@@ -130,11 +130,16 @@ def _search_callback(key, person, user_type, id_map={}):
 
     search_queue = libsearch.parse_query(q)
     
+    if 'g' in id_map:
+        groups = id_map['g']
+    else:
+        groups = []
+    
     tag = Tag.objects.get(name=id_map['tag'])
     
     #samples = Sample.objects.filter(tagsamplesearch__tag_keyword_search__keyword__name__contains=q).filter(tagsamplesearch__tag_keyword_search__tag__id=tag.id).distinct()
     
-    samples = _search_samples(tag, search_queue)
+    samples = _search_samples(tag, groups, search_queue)
     
     if 'type' in id_map:
         samples = samples.filter(expression_type_id__in=id_map['type'])
@@ -153,18 +158,28 @@ def _search_callback(key, person, user_type, id_map={}):
     return JsonResponse(serializer.data, safe=False)
 
 
-def _search_samples(tag, search_queue):
+def _search_samples(tag, groups, search_queue):
     if len(search_queue) == 0:
-        # If there is no query, default to return 100 results ordered 
-        # by name
-        return Sample.objects.order_by('name')
+        if len(groups) > 0:
+            return Sample.objects.filter(groups__in=groups).distinct().order_by('name')
+        else:
+            # If there is no query, default to return 100 results ordered 
+            # by name
+            return Sample.objects.order_by('name')
 
     stack = libcollections.Stack()
 
     for e in search_queue:
         if e.op == 'MATCH':
-            samples = Sample.objects.filter(tagsamplesearch__tag_keyword_search__keyword__name__contains=e.text) \
-                .filter(tagsamplesearch__tag_keyword_search__tag__id=tag.id).distinct()
+            if len(groups) > 0:
+                samples = Sample.objects.filter(tagsamplesearch__tag_keyword_search__keyword__name__contains=e.text) \
+                    .filter(tagsamplesearch__tag_keyword_search__tag__id=tag.id) \
+                    .filter(groups_in=groups) \
+                    .distinct().order_by('name')
+            else:
+                samples = Sample.objects.filter(tagsamplesearch__tag_keyword_search__keyword__name__contains=e.text) \
+                    .filter(tagsamplesearch__tag_keyword_search__tag__id=tag.id) \
+                    .distinct().order_by('name')
     
             stack.push(samples)
         elif e.op == 'AND':
@@ -184,6 +199,7 @@ def search(request):
         .add('tag', '/All') \
         .add('type', arg_type=str, multiple=True) \
         .add('person', None, int, multiple=True) \
+        .add('g', None, arg_type=str, multiple=True) \
         .add('max_count', 100) \
         .parse(request)
     
