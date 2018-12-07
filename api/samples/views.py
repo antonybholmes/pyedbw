@@ -69,7 +69,7 @@ def _tags_callback(key, person, user_type, id_map={}):
     ret = []
     
     if 'tag' in id_map:
-        tags = SampleTag.objects.filter(sample__in=id_map['sample'], tag__id=id_map['tag'])
+        tags = SampleTag.objects.filter(sample__id=id_map['sample'], tag__id=id_map['tag'])
         _append_tags(tags, ret)
             
         #tags = SampleIntTag.objects.filter(sample__in=id_map['sample'], tag__in=id_map['tag'])
