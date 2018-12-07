@@ -151,7 +151,9 @@ def _search_callback(key, person, user_type, id_map={}):
     
     max_count = id_map['max_count']
     
-    samples = samples[:max_count]
+    if len(search_queue) == 0 and len(groups) == 0:
+        # Blanket search so just return the first n records
+        samples = samples[:max_count]
     
     serializer = SampleSerializer(samples, many=True, read_only=True)
     
