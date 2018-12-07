@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api.samples.models import Sample, SampleTag, SampleIntTag
+from api.samples.models import Sample #, SampleTag, SampleIntTag
 
 class SampleSerializer(serializers.ModelSerializer):
     """
@@ -19,27 +19,27 @@ class SampleSerializer(serializers.ModelSerializer):
         fields = ('id', 'e', 'n', 'o', 't', 'd')
         
         
-class SampleTagSerializer(serializers.ModelSerializer):
-    """
-    Serialize sample to JSON
-    """
+#class SampleTagSerializer(serializers.ModelSerializer):
+    #"""
+    #Serialize sample to JSON
+    #"""
     
-    id = serializers.CharField(source='tag.id')
-    v = serializers.CharField(source='value')
+    #id = serializers.CharField(source='tag.id')
+    #v = serializers.CharField(source='value')
     
-    class Meta:
-        model = SampleTag
-        fields = ('id', 'v')
+    #class Meta:
+        #model = SampleTag
+        #fields = ('id', 'v')
         
         
-class SampleIntTagSerializer(serializers.ModelSerializer):
-    """
-    Serialize sample to JSON
-    """
+#class SampleIntTagSerializer(serializers.ModelSerializer):
+    #"""
+    #Serialize sample to JSON
+    #"""
     
-    id = serializers.CharField(source='tag.id')
-    v = serializers.CharField(source='value')
+    #id = serializers.CharField(source='tag.id')
+    #v = serializers.CharField(source='value')
     
-    class Meta:
-        model = SampleIntTag
-        fields = ('id', 'v')
+    #class Meta:
+        #model = SampleIntTag
+        #fields = ('id', 'v')

@@ -1,6 +1,6 @@
 from django.db import models
 from datetime import datetime
-from api.models import Tag
+from api.models import Tag, TagType
 from api.persons.models import Person, GroupPerson
 from api.vfs.models import VFSFile
 from api.groups.models import Group
@@ -46,35 +46,48 @@ class SamplePerson(models.Model):
     class Meta:
         db_table = 'sample_persons'
         
-        
+
 class SampleTag(models.Model):
     sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
     tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
-    value = models.CharField(max_length=255)
+    tag_type = models.ForeignKey(TagType, on_delete=models.CASCADE)
+    str_value = models.CharField(max_length=255)
+    int_value = models.IntegerField()
+    float_value = models.FloatField()
     created = models.DateTimeField()
     
     class Meta:
-        db_table = 'tags_sample'
+        db_table = 'sample_tags'
 
         
-class SampleIntTag(models.Model):
-    sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
-    tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
-    value = models.IntegerField()
-    created = models.DateTimeField()
+#class SampleTag(models.Model):
+    #sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
+    #tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
+    #value = models.CharField(max_length=255)
+    #created = models.DateTimeField()
     
-    class Meta:
-        db_table = 'tags_sample_int'
+    #class Meta:
+        #db_table = 'tags_sample'
+
+        
+#class SampleIntTag(models.Model):
+    #sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
+    #tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
+    #value = models.IntegerField()
+    #created = models.DateTimeField()
+    
+    #class Meta:
+        #db_table = 'tags_sample_int'
         
 
-class SampleFloatTag(models.Model):
-    sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
-    tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
-    value = models.FloatField()
-    created = models.DateTimeField()
+#class SampleFloatTag(models.Model):
+    #sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
+    #tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
+    #value = models.FloatField()
+    #created = models.DateTimeField()
     
-    class Meta:
-        db_table = 'tags_sample_float'
+    #class Meta:
+        #db_table = 'tags_sample_float'
         
 
 class Keyword(models.Model):

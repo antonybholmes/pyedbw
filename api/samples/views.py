@@ -7,10 +7,11 @@ from api.persons.models import Person
 from api.persons.serializers import PersonSerializer
 from api.vfs.models import VFSFile
 from api.vfs.serializers import VFSFileSerializer
-from api.samples.models import Sample, TagSampleSearch, TagKeywordSearch, SampleFile, SampleTag, SampleIntTag, SampleFloatTag
-from api.samples.serializers import SampleSerializer, SampleTagSerializer
+from api.samples.models import Sample, TagSampleSearch, TagKeywordSearch, SampleFile, SampleTag #, SampleIntTag, SampleFloatTag
+from api.samples.serializers import SampleSerializer #, SampleTagSerializer
 from api import auth, libsearch, libcollections
 import libhttp
+import collections
 
   
 def _sample_callback(key, person, user_type, id_map={}):
@@ -18,9 +19,9 @@ def _sample_callback(key, person, user_type, id_map={}):
         ids = id_map['sample']
         
         if user_type != 'Normal':
-            samples = Sample.objects.filter(id__in=ids)
+            samples = Sample.objects.filter(id__in=ids).order_by('name')
         else:
-            samples = Sample.objects.filter(groups__person__id=person.id, id__in=ids)
+            samples = Sample.objects.filter(groups__person__id=person.id, id__in=ids).distinct().order_by('name')
     else:
         # return all samples
         
@@ -32,13 +33,20 @@ def _sample_callback(key, person, user_type, id_map={}):
             # Normal users are filtered by the groups they belong to
             samples = Sample.objects.filter(groups__person__id=person.id)
     
+    print(id_map['sample'])
+    
     serializer = SampleSerializer(samples, many=True, read_only=True)
     
     return JsonResponse(serializer.data, safe=False)    
 
 
 def samples(request):
-    id_map = auth.parse_ids(request, 'sample')
+    id_map = libhttp.ArgParser() \
+        .add('key') \
+        .add('sample', None, int, multiple=True) \
+        .parse(request)
+        
+    #id_map = auth.parse_ids(request, 'sample')
  
     return auth.auth(request, _sample_callback, id_map=id_map)
 
@@ -64,37 +72,52 @@ def _tags_callback(key, person, user_type, id_map={}):
         tags = SampleTag.objects.filter(sample__in=id_map['sample'], tag__in=id_map['tag'])
         _append_tags(tags, ret)
             
-        tags = SampleIntTag.objects.filter(sample__in=id_map['sample'], tag__in=id_map['tag'])
-        _append_tags(tags, ret)
+        #tags = SampleIntTag.objects.filter(sample__in=id_map['sample'], tag__in=id_map['tag'])
+        #_append_tags(tags, ret)
         
-        tags = SampleFloatTag.objects.filter(sample__in=id_map['sample'], tag__in=id_map['tag'])
-        _append_tags(tags, ret)
+        #tags = SampleFloatTag.objects.filter(sample__in=id_map['sample'], tag__in=id_map['tag'])
+        #_append_tags(tags, ret)
     else:
-        tags = SampleTag.objects.filter(sample__in=id_map['sample'])
+        tags = SampleTag.objects.filter(sample__id=id_map['sample'])
         _append_tags(tags, ret)   
         
-        tags = SampleIntTag.objects.filter(sample__in=id_map['sample'])
-        _append_tags(tags, ret)
+        #tags = SampleIntTag.objects.filter(sample__in=id_map['sample'])
+        #_append_tags(tags, ret)
         
-        tags = SampleFloatTag.objects.filter(sample__in=id_map['sample'])
-        _append_tags(tags, ret)
+        #tags = SampleFloatTag.objects.filter(sample__in=id_map['sample'])
+        #_append_tags(tags, ret)
     
     # Rather than using a serializer, here we combine records into
     # a list of dicts and use that to generate JSON directly
-    serializer = SampleTagSerializer(tags, many=True, read_only=True)
+    #serializer = SampleTagSerializer(tags, many=True, read_only=True)
     
     return JsonResponse(ret, safe=False)
 
 
 def _append_tags(sample_tags, ret):
     for sample_tag in sample_tags:
-        ret.append({'id' : sample_tag.tag.id, 'v' : sample_tag.value})
+        tag = collections.OrderedDict()
+        
+        tag['id'] = sample_tag.tag.id
+        
+        if sample_tag.tag_type.id == 2:
+            tag['v'] = sample_tag.int_value
+        elif sample_tag.tag_type.id == 3:
+            tag['v'] = sample_tag.float_value
+        else:
+            tag['v'] = sample_tag.str_value
+            
+        #tag['t'] = sample_tag.tag_type.id
+        
+        ret.append(tag)
 
 
 def tags(request):
-    id_map = {}
-    auth.parse_ids(request, 'sample', id_map=id_map)
-    auth.parse_ids(request, 'tag', id_map=id_map)
+    id_map = libhttp.ArgParser() \
+        .add('key') \
+        .add('sample', arg_type=int) \
+        .add('tag', arg_type=int, multiple=True) \
+        .parse(request)
     
     return auth.auth(request, _tags_callback, id_map=id_map, check_for={'sample'})
        
