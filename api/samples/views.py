@@ -199,7 +199,7 @@ def _search_samples(tag, groups, search_queue):
             if len(groups) > 0:
                 samples = Sample.objects.filter(tagsamplesearch__tag_keyword_search__keyword__name__contains=e.text) \
                     .filter(tagsamplesearch__tag_keyword_search__tag__id=tag.id) \
-                    .filter(groups_in=groups) \
+                    .filter(groups__in=groups) \
                     .distinct().order_by('name')
             else:
                 samples = Sample.objects.filter(tagsamplesearch__tag_keyword_search__keyword__name__contains=e.text) \
