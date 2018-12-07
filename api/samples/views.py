@@ -96,7 +96,7 @@ def _tags_callback(key, person, user_type, id_map={}):
 
 def _append_tags(sample_tags, ret):
     for sample_tag in sample_tags:
-        tag = collections.OrderedDict()
+        tag = {} #collections.OrderedDict()
         
         tag['id'] = sample_tag.tag.id
         
