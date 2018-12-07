@@ -116,7 +116,7 @@ def tags(request):
     id_map = libhttp.ArgParser() \
         .add('key') \
         .add('sample', arg_type=int) \
-        .add('tag', arg_type=int, multiple=True) \
+        .add('tag', arg_type=int) \
         .parse(request)
     
     return auth.auth(request, _tags_callback, id_map=id_map, check_for={'sample'})
