@@ -37,7 +37,7 @@ def _sample_callback(key, person, user_type, id_map={}):
     
     serializer = SampleSerializer(samples, many=True, read_only=True)
     
-    return JsonResponse(serializer.data, safe=False)    
+    return JsonResponse(serializer.data, safe=False)
 
 
 def samples(request):
@@ -64,35 +64,6 @@ def persons(request):
     
     return auth.auth(request, _persons_callback, id_map=id_map, check_for={'sample'})
     
-    
-def _tags_callback(key, person, user_type, id_map={}):
-    ret = []
-    
-    if 'tag' in id_map:
-        tags = SampleTag.objects.filter(sample__id=id_map['sample'], tag__id=id_map['tag'])
-        _append_tags(tags, ret)
-            
-        #tags = SampleIntTag.objects.filter(sample__in=id_map['sample'], tag__in=id_map['tag'])
-        #_append_tags(tags, ret)
-        
-        #tags = SampleFloatTag.objects.filter(sample__in=id_map['sample'], tag__in=id_map['tag'])
-        #_append_tags(tags, ret)
-    else:
-        tags = SampleTag.objects.filter(sample__id=id_map['sample'])
-        _append_tags(tags, ret)   
-        
-        #tags = SampleIntTag.objects.filter(sample__in=id_map['sample'])
-        #_append_tags(tags, ret)
-        
-        #tags = SampleFloatTag.objects.filter(sample__in=id_map['sample'])
-        #_append_tags(tags, ret)
-    
-    # Rather than using a serializer, here we combine records into
-    # a list of dicts and use that to generate JSON directly
-    #serializer = SampleTagSerializer(tags, many=True, read_only=True)
-    
-    return JsonResponse(ret, safe=False)
-
 
 def _append_tags(sample_tags, ret):
     for sample_tag in sample_tags:
@@ -107,9 +78,69 @@ def _append_tags(sample_tags, ret):
         else:
             tag['v'] = sample_tag.str_value
             
-        #tag['t'] = sample_tag.tag_type.id
-        
         ret.append(tag)
+        
+def _append_tags(sample_tags, ret):
+    for sample_tag in sample_tags:
+        tag = {} #collections.OrderedDict()
+        
+        tag['id'] = sample_tag.tag.id
+        
+        if sample_tag.tag_type.id == 2:
+            tag['v'] = sample_tag.int_value
+        elif sample_tag.tag_type.id == 3:
+            tag['v'] = sample_tag.float_value
+        else:
+            tag['v'] = sample_tag.str_value
+            
+        ret.append(tag)
+        
+def _tags_to_str(sample_tags):
+    ret = '' #tag:value\n'
+    
+    for sample_tag in sample_tags:
+        if sample_tag.tag_type.id == 2:
+            v = sample_tag.int_value
+        elif sample_tag.tag_type.id == 3:
+            v = sample_tag.float_value
+        else:
+            v = sample_tag.str_value
+            
+        ret += '{}:{}\n'.format(sample_tag.tag.id, v)
+    
+    return ret
+
+def _tags_callback(key, person, user_type, id_map={}):
+    if 'tag' in id_map:
+        tags = SampleTag.objects.filter(sample__id=id_map['sample'], tag__id=id_map['tag'])
+        #tags = SampleIntTag.objects.filter(sample__in=id_map['sample'], tag__in=id_map['tag'])
+        #_append_tags(tags, ret)
+        
+        #tags = SampleFloatTag.objects.filter(sample__in=id_map['sample'], tag__in=id_map['tag'])
+        #_append_tags(tags, ret)
+    else:
+        tags = SampleTag.objects.filter(sample__id=id_map['sample'])
+        
+        
+        #tags = SampleIntTag.objects.filter(sample__in=id_map['sample'])
+        #_append_tags(tags, ret)
+        
+        #tags = SampleFloatTag.objects.filter(sample__in=id_map['sample'])
+        #_append_tags(tags, ret)
+    
+    # Rather than using a serializer, here we combine records into
+    # a list of dicts and use that to generate JSON directly
+    #serializer = SampleTagSerializer(tags, many=True, read_only=True)
+    
+    if id_map['format'] == 'text':
+        return HttpResponse(_tags_to_str(tags), content_type='text/plain; charset=utf8')
+    else:
+        ret = []
+        _append_tags(tags, ret)
+        return JsonResponse(ret, safe=False)
+
+
+
 
 
 def tags(request):
@@ -117,6 +148,7 @@ def tags(request):
         .add('key') \
         .add('sample', arg_type=int) \
         .add('tag', arg_type=int) \
+        .add('format', 'json') \
         .parse(request)
     
     return auth.auth(request, _tags_callback, id_map=id_map, check_for={'sample'})
