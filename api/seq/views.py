@@ -25,8 +25,6 @@ def counts_callback(key, person, user_type, id_map=None):
     
     genome = id_map['g']
     
-    print(genome)
-    
     loc = libhttpdna.get_loc_from_params(id_map)
     
     if loc is None:
@@ -49,26 +47,22 @@ def counts_callback(key, person, user_type, id_map=None):
     
     bin_width = id_map['bw']
     
-    print(bin_width, dir, loc)
-    
     bcr = libseq.BinCountReader(dir, genome=genome, mode=mode)
     counts = bcr.get_counts(loc, bin_width=bin_width)
     
     f = id_map['format']
     
     if f == 'binary':
-        ret = bytearray(locations.size * 4)
+        ret = bytearray(counts.size * 4)
         
         i = 0
         
         for c in counts:
             print(i, c, struct.pack('>I', c))
             ret[i:(i + 4)] = struct.pack('>I', c)
-            i += 4 
-        
-        print(ret)
-        
-        return HttpResponse(ret, content_type='application/octet-stream')
+            i += 4
+            
+        return HttpResponse(ret.decode('utf-8'), content_type='application/octet-stream')
     elif f == 'text':
         return HttpResponse(','.join([str(c) for c in counts]), content_type='text/plain')
     else:
