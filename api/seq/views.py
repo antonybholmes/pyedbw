@@ -62,7 +62,7 @@ def counts_callback(key, person, user_type, id_map=None):
             ret[i:(i + 4)] = struct.pack('>I', c)
             i += 4
             
-        return HttpResponse(ret.decode('utf-8'), content_type='application/octet-stream')
+        return HttpResponse(ret.decode(), content_type='application/octet-stream')
     elif f == 'text':
         return HttpResponse(','.join([str(c) for c in counts]), content_type='text/plain')
     else:
