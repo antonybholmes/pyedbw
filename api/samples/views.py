@@ -7,7 +7,7 @@ from api.persons.models import Person
 from api.persons.serializers import PersonSerializer
 from api.vfs.models import VFSFile
 from api.vfs.serializers import VFSFileSerializer
-from api.samples.models import Sample, TagSampleSearch, TagKeywordSearch, SampleFile, SampleTag #, SampleIntTag, SampleFloatTag
+from api.samples.models import Sample, SampleTags, TagSampleSearch, TagKeywordSearch, SampleFile, SampleTag #, SampleIntTag, SampleFloatTag
 from api.samples.serializers import SampleSerializer #, SampleTagSerializer
 from api import auth, libsearch, libcollections
 import libhttp
@@ -109,35 +109,25 @@ def _tags_to_str(sample_tags):
         ret += '{}:{}\n'.format(sample_tag.tag.id, v)
     
     return ret
+    
+def _json_to_str(tags):
+    ret = ''
+    
+    for tag in tags.values('data')[0]['data']:
+        print(tag)
+        ret += '{}:{}\n'.format(tag['id'], tag['v'])
+    
+    return ret
 
 def _tags_callback(key, person, user_type, id_map={}):
-    if 'tag' in id_map:
-        tags = SampleTag.objects.filter(sample__id=id_map['sample'], tag__id=id_map['tag'])
-        #tags = SampleIntTag.objects.filter(sample__in=id_map['sample'], tag__in=id_map['tag'])
-        #_append_tags(tags, ret)
-        
-        #tags = SampleFloatTag.objects.filter(sample__in=id_map['sample'], tag__in=id_map['tag'])
-        #_append_tags(tags, ret)
-    else:
-        tags = SampleTag.objects.filter(sample__id=id_map['sample'])
-        
-        
-        #tags = SampleIntTag.objects.filter(sample__in=id_map['sample'])
-        #_append_tags(tags, ret)
-        
-        #tags = SampleFloatTag.objects.filter(sample__in=id_map['sample'])
-        #_append_tags(tags, ret)
-    
-    # Rather than using a serializer, here we combine records into
-    # a list of dicts and use that to generate JSON directly
-    #serializer = SampleTagSerializer(tags, many=True, read_only=True)
+    tags = SampleTags.objects.filter(sample_id=id_map['sample'])
     
     if id_map['format'] == 'text':
-        return HttpResponse(_tags_to_str(tags), content_type='text/plain; charset=utf8')
+        return HttpResponse(_json_to_str(tags), content_type='text/plain; charset=utf8')
     else:
-        ret = []
-        _append_tags(tags, ret)
-        return JsonResponse(ret, safe=False)
+        #print(tags.values('data')[0]['data'][0]['id'])
+
+        return JsonResponse(tags.values('data')[0]['data'], safe=False)
 
 
 

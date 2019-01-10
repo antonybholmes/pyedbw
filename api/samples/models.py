@@ -4,6 +4,7 @@ from api.models import Tag, TagType
 from api.persons.models import Person, GroupPerson
 from api.vfs.models import VFSFile
 from api.groups.models import Group
+from django.contrib.postgres.fields import JSONField
 
 class Sample(models.Model):
     experiment_id = models.IntegerField()
@@ -19,6 +20,13 @@ class Sample(models.Model):
 
     class Meta:
         db_table = 'samples'
+        
+class SampleTags(models.Model):
+    sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
+    data = models.TextField()
+
+    class Meta:
+        db_table = 'sample_tags_json'
                
 
 class GroupSample(models.Model):
