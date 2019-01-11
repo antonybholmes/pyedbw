@@ -194,6 +194,9 @@ def files(request):
     
 def _search_callback(key, person, user_type, id_map={}):
     
+    # records per page
+    records = id_map['records']
+    
     if 'page' in id_map:
         page = id_map['page']
     else:
@@ -246,7 +249,7 @@ def _search_callback(key, person, user_type, id_map={}):
             # the search query
             samples = samples.union(set_samples)
             
-    paginator = Paginator(samples, SAMPLES_PER_PAGE)
+    paginator = Paginator(samples, records)
     
     page_samples = paginator.get_page(page)
     
@@ -303,6 +306,7 @@ def search(request):
         .add('g', None, int, multiple=True) \
         .add('set', None, int, multiple=True) \
         .add('page', default_value=None, arg_type=int) \
+        .add('records', default_value=25) \
         .add('max_count', 100) \
         .parse(request)
     
