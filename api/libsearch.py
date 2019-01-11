@@ -101,7 +101,7 @@ def add_lower_precedence_ops(op1, output_queue, op_stack):
             break
 
         # We have encountered two 'and' statements for example
-        output_queue.append(SearchStackElement(op2))
+        output_queue.append(SearchStackElem(op2))
 
         # remove the operator as we have dealt with it
         op_stack.pop()
@@ -119,7 +119,7 @@ def right_parens(output_queue, op_stack):
         if op2 == '(':
             break
 
-        output_queue.add(SearchStackElement(op2))
+        output_queue.add(SearchStackElem(op2))
         
   
 def precedence(op):
