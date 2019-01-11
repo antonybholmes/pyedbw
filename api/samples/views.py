@@ -194,7 +194,10 @@ def files(request):
     
 def _search_callback(key, person, user_type, id_map={}):
     
-    page = id_map['page']
+    if 'page' in id_map:
+        page = id_map['page']
+    else:
+        page = 1
     
     if 'set' in id_map:
         set_samples = Sample.objects.filter(sets__in=id_map['set']).distinct().order_by('name')
@@ -249,9 +252,11 @@ def _search_callback(key, person, user_type, id_map={}):
     
     serializer = SampleSerializer(page_samples, many=True, read_only=True)
     
-    return JsonResponse(serializer.data, safe=False)
-    
-    #return JsonResponse({'page':page, 'pages':paginator.num_pages, 'results':serializer.data}, safe=False)
+    if 'page' in id_map:
+        return JsonResponse({'page':page, 'pages':paginator.num_pages, 'results':serializer.data}, safe=False)
+    else:
+        # The old style of response which is just a list of results
+        return JsonResponse(serializer.data, safe=False)
 
 
 def _search_samples(tag, groups, search_queue):
@@ -297,7 +302,7 @@ def search(request):
         .add('person', None, int, multiple=True) \
         .add('g', None, int, multiple=True) \
         .add('set', None, int, multiple=True) \
-        .add('page', default_value=1) \
+        .add('page', default_value=None, arg_type=int) \
         .add('max_count', 100) \
         .parse(request)
     
