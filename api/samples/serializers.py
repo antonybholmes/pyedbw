@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api.samples.models import Sample, SampleTags #, SampleTag, SampleIntTag
+from api.samples.models import Sample, SampleTags, Set #, SampleTag, SampleIntTag
 
 class SampleSerializer(serializers.ModelSerializer):
     """
@@ -17,7 +17,18 @@ class SampleSerializer(serializers.ModelSerializer):
     class Meta:
         model = Sample
         fields = ('id', 'e', 'n', 'o', 't', 'd')
-        
+              
+class SetSerializer(serializers.ModelSerializer):
+    """
+    Serialize sample to JSON
+    """
+    
+    
+    n = serializers.CharField(source='name')
+    
+    class Meta:
+        model = Set
+        fields = ('id', 'n')
         
 #class SampleTagSerializer(serializers.ModelSerializer):
     #"""

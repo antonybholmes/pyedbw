@@ -7,8 +7,8 @@ from api.persons.models import Person
 from api.persons.serializers import PersonSerializer
 from api.vfs.models import VFSFile
 from api.vfs.serializers import VFSFileSerializer
-from api.samples.models import Sample, SampleTags, TagSampleSearch, TagKeywordSearch, SampleFile, SampleTag #, SampleIntTag, SampleFloatTag
-from api.samples.serializers import SampleSerializer #, SampleTagSerializer
+from api.samples.models import Sample, Set, SampleTags, TagSampleSearch, TagKeywordSearch, SampleFile, SampleTag #, SampleIntTag, SampleFloatTag
+from api.samples.serializers import SampleSerializer, SetSerializer #, SampleTagSerializer
 from api import auth, libsearch, libcollections
 import libhttp
 import collections
@@ -63,6 +63,30 @@ def persons(request):
     id_map = auth.parse_ids(request, 'sample')
     
     return auth.auth(request, _persons_callback, id_map=id_map, check_for={'sample'})
+    
+    
+def _sets_callback(key, person, user_type, id_map={}):
+    if 'set' in id_map:
+        sets = id_map['set']
+        
+        samples = Sample.objects.filter(sets__in=sets).distinct().order_by('name')
+        
+        serializer = SampleSerializer(samples, many=True, read_only=True)
+    
+        return JsonResponse(serializer.data, safe=False)
+    else:
+        serializer = SetSerializer(Set.objects.all(), many=True, read_only=True)
+    
+        return JsonResponse(serializer.data, safe=False)    
+
+
+def sets(request):
+    id_map = libhttp.ArgParser() \
+        .add('key') \
+        .add('set', None, int, multiple=True) \
+        .parse(request)
+    
+    return auth.auth(request, _sets_callback, id_map=id_map)
     
 
 def _append_tags(sample_tags, ret):
@@ -130,9 +154,6 @@ def _tags_callback(key, person, user_type, id_map={}):
         return JsonResponse(tags.values('data')[0]['data'], safe=False)
 
 
-
-
-
 def tags(request):
     id_map = libhttp.ArgParser() \
         .add('key') \
@@ -169,6 +190,12 @@ def files(request):
     
     
 def _search_callback(key, person, user_type, id_map={}):
+    
+    if 's' in id_map:
+        set_samples = Sample.objects.filter(sets__in=id_map['s']).distinct()
+    else:
+        set_samples = None
+        
     # The search query
     
     q = id_map['q']
@@ -182,8 +209,6 @@ def _search_callback(key, person, user_type, id_map={}):
     
     tag = Tag.objects.get(name=id_map['tag'])
     
-    #samples = Sample.objects.filter(tagsamplesearch__tag_keyword_search__keyword__name__contains=q).filter(tagsamplesearch__tag_keyword_search__tag__id=tag.id).distinct()
-    
     samples = _search_samples(tag, groups, search_queue)
     
     if 'type' in id_map:
@@ -191,16 +216,35 @@ def _search_callback(key, person, user_type, id_map={}):
     
     if 'person' in id_map:
         samples = samples.filter(persons__in=id_map['person'])
+        
+        
+    if user_type == 'Normal':
+        # filter what user can see
+        samples = Sample.objects.filter(groups__person__id=person.id)
     
     # filter by size
     
     max_count = id_map['max_count']
     
-    if len(search_queue) == 0 or len(groups) == 0:
-        # Blanket search so just return the first n records
-        samples = samples[:max_count]
+    ret = samples
     
-    serializer = SampleSerializer(samples, many=True, read_only=True)
+    if set_samples is not None:
+        # There are some samples in the sets
+        
+        if len(search_queue) == 0:
+            # If user didn't search for anything, results are just
+            # the selected sets
+            ret = set_samples
+        else:
+            # If there was a search, take the union of the sets and
+            # the search query
+            ret = ret.union(set_samples)
+    else:
+        if len(search_queue) == 0 or len(groups) == 0:
+            # Blanket search so just return the first n records
+            samples = samples[:max_count]
+    
+    serializer = SampleSerializer(ret, many=True, read_only=True)
     
     return JsonResponse(serializer.data, safe=False)
 
@@ -246,7 +290,8 @@ def search(request):
         .add('tag', '/All') \
         .add('type', arg_type=str, multiple=True) \
         .add('person', None, int, multiple=True) \
-        .add('g', None, arg_type=str, multiple=True) \
+        .add('g', None, int, multiple=True) \
+        .add('s', None, int, multiple=True) \
         .add('max_count', 100) \
         .parse(request)
     

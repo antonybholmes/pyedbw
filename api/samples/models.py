@@ -6,6 +6,13 @@ from api.vfs.models import VFSFile
 from api.groups.models import Group
 from django.contrib.postgres.fields import JSONField
 
+class Set(models.Model):
+    name = models.CharField(max_length=255)
+
+    class Meta:
+        db_table = 'sets'
+        
+        
 class Sample(models.Model):
     experiment_id = models.IntegerField()
     name = models.CharField(max_length=255)
@@ -14,6 +21,7 @@ class Sample(models.Model):
     # the shared groups they belong to.
     groups = models.ManyToManyField(Group, through='GroupSample')
     persons = models.ManyToManyField(Person, through='SamplePerson')
+    sets = models.ManyToManyField(Set, through='SetSample')
     organism_id = models.IntegerField()
     expression_type_id = models.IntegerField()
     created = models.DateTimeField('%Y-%m-%d')
@@ -27,8 +35,14 @@ class SampleTags(models.Model):
 
     class Meta:
         db_table = 'sample_tags_json'
-               
+        
+class SetSample(models.Model):
+    set = models.ForeignKey(Set, on_delete=models.CASCADE)
+    sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
 
+    class Meta:
+        db_table = 'sets_samples'
+        
 class GroupSample(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
     sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
