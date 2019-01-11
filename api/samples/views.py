@@ -2,6 +2,7 @@ from django.shortcuts import render
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.core import serializers
+from django.core.paginator import Paginator
 from api.models import Tag
 from api.persons.models import Person
 from api.persons.serializers import PersonSerializer
@@ -12,6 +13,8 @@ from api.samples.serializers import SampleSerializer, SetSerializer #, SampleTag
 from api import auth, libsearch, libcollections
 import libhttp
 import collections
+
+SAMPLES_PER_PAGE = 50
 
   
 def _sample_callback(key, person, user_type, id_map={}):
@@ -191,8 +194,10 @@ def files(request):
     
 def _search_callback(key, person, user_type, id_map={}):
     
-    if 's' in id_map:
-        set_samples = Sample.objects.filter(sets__in=id_map['s']).distinct()
+    page = id_map['page']
+    
+    if 'set' in id_map:
+        set_samples = Sample.objects.filter(sets__in=id_map['set']).distinct().order_by('name')
     else:
         set_samples = None
         
@@ -226,27 +231,27 @@ def _search_callback(key, person, user_type, id_map={}):
     
     max_count = id_map['max_count']
     
-    ret = samples
-    
     if set_samples is not None:
         # There are some samples in the sets
         
         if len(search_queue) == 0:
             # If user didn't search for anything, results are just
             # the selected sets
-            ret = set_samples
+            samples = set_samples
         else:
             # If there was a search, take the union of the sets and
             # the search query
-            ret = ret.union(set_samples)
-    else:
-        if len(search_queue) == 0 or len(groups) == 0:
-            # Blanket search so just return the first n records
-            samples = samples[:max_count]
+            samples = samples.union(set_samples)
+            
+    paginator = Paginator(samples, SAMPLES_PER_PAGE)
     
-    serializer = SampleSerializer(ret, many=True, read_only=True)
+    page_samples = paginator.get_page(page)
+    
+    serializer = SampleSerializer(page_samples, many=True, read_only=True)
     
     return JsonResponse(serializer.data, safe=False)
+    
+    #return JsonResponse({'page':page, 'pages':paginator.num_pages, 'results':serializer.data}, safe=False)
 
 
 def _search_samples(tag, groups, search_queue):
@@ -291,11 +296,12 @@ def search(request):
         .add('type', arg_type=str, multiple=True) \
         .add('person', None, int, multiple=True) \
         .add('g', None, int, multiple=True) \
-        .add('s', None, int, multiple=True) \
+        .add('set', None, int, multiple=True) \
+        .add('page', default_value=1) \
         .add('max_count', 100) \
         .parse(request)
     
-    print(id_map)
+    #print(id_map)
     
     return auth.auth(request, _search_callback, id_map=id_map)
     
