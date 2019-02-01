@@ -15,6 +15,7 @@ import libhttp
 import collections
 
 SAMPLES_PER_PAGE = 50
+MAX_RECORDS_PER_PAGE = 100
 
   
 def _sample_callback(key, person, user_type, id_map={}):
@@ -195,7 +196,7 @@ def files(request):
 def _search_callback(key, person, user_type, id_map={}):
     
     # records per page
-    records = id_map['records']
+    records = min(id_map['records'], MAX_RECORDS_PER_PAGE)
     
     if 'page' in id_map:
         page = id_map['page']
@@ -231,11 +232,7 @@ def _search_callback(key, person, user_type, id_map={}):
         
     if user_type == 'Normal':
         # filter what user can see
-        samples = Sample.objects.filter(groups__person__id=person.id)
-    
-    # filter by size
-    
-    max_count = id_map['max_count']
+        samples = samples.filter(groups__person__id=person.id)
     
     if set_samples is not None:
         # There are some samples in the sets
@@ -256,6 +253,8 @@ def _search_callback(key, person, user_type, id_map={}):
     serializer = SampleSerializer(page_samples, many=True, read_only=True)
     
     if 'page' in id_map:
+        # If we use the page param, return results in the new format
+        # that include page and pages meta data
         return JsonResponse({'page':page, 'pages':paginator.num_pages, 'results':serializer.data}, safe=False)
     else:
         # The old style of response which is just a list of results
@@ -307,7 +306,6 @@ def search(request):
         .add('set', None, int, multiple=True) \
         .add('page', default_value=None, arg_type=int) \
         .add('records', default_value=25) \
-        .add('max_count', 100) \
         .parse(request)
     
     #print(id_map)
