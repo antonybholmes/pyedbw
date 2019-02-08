@@ -1,5 +1,5 @@
 from rest_framework import serializers
-from api.samples.models import Sample, SampleTags, Set #, SampleTag, SampleIntTag
+from api.samples.models import Sample, Set #, SampleTag, SampleIntTag
 
 class SampleSerializer(serializers.ModelSerializer):
     """

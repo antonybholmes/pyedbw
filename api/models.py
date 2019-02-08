@@ -5,6 +5,7 @@ from datetime import datetime
 
 class Tag(models.Model):
     name = models.CharField(max_length=255)
+    alt_name = models.CharField(max_length=255)
     created = models.DateTimeField()
 
     class Meta:

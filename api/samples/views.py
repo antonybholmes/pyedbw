@@ -1,3 +1,6 @@
+import sys
+import collections
+
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.http import JsonResponse
@@ -8,7 +11,7 @@ from api.persons.models import Person
 from api.persons.serializers import PersonSerializer
 from api.vfs.models import VFSFile
 from api.vfs.serializers import VFSFileSerializer
-from api.samples.models import Sample, Set, SampleTags, TagSampleSearch, TagKeywordSearch, SampleFile, SampleTag #, SampleIntTag, SampleFloatTag
+from api.samples.models import Sample, Set, SampleTagsJson, TagSampleSearch, TagKeywordSearch, SampleFile, SampleTag #, SampleIntTag, SampleFloatTag
 from api.samples.serializers import SampleSerializer, SetSerializer #, SampleTagSerializer
 from api import auth, libsearch, libcollections
 import libhttp
@@ -148,7 +151,7 @@ def _json_to_str(tags):
     return ret
 
 def _tags_callback(key, person, user_type, id_map={}):
-    tags = SampleTags.objects.filter(sample_id=id_map['sample'])
+    tags = SampleTagsJson.objects.filter(sample_id=id_map['sample'])
     
     if id_map['format'] == 'text':
         return HttpResponse(_json_to_str(tags), content_type='text/plain; charset=utf8')
@@ -204,7 +207,7 @@ def _search_callback(key, person, user_type, id_map={}):
         page = 1
     
     if 'set' in id_map:
-        set_samples = Sample.objects.filter(sets__in=id_map['set']).distinct().order_by('name')
+        set_samples = Sample.objects.filter(sets__in=id_map['set']) #.distinct().order_by('name')
     else:
         set_samples = None
         
@@ -233,9 +236,12 @@ def _search_callback(key, person, user_type, id_map={}):
     if user_type == 'Normal':
         # filter what user can see
         samples = samples.filter(groups__person__id=person.id)
+        sys.stderr.write('n')
     
     if set_samples is not None:
         # There are some samples in the sets
+        
+        sys.stderr.write('set')
         
         if len(search_queue) == 0:
             # If user didn't search for anything, results are just
@@ -245,20 +251,56 @@ def _search_callback(key, person, user_type, id_map={}):
             # If there was a search, take the union of the sets and
             # the search query
             samples = samples.union(set_samples)
+    
+    # Sort them
+    samples = samples.distinct().order_by('name')
             
     paginator = Paginator(samples, records)
     
     page_samples = paginator.get_page(page)
     
-    serializer = SampleSerializer(page_samples, many=True, read_only=True)
+    sortby = id_map['sortby']
     
-    if 'page' in id_map:
-        # If we use the page param, return results in the new format
-        # that include page and pages meta data
-        return JsonResponse({'page':page, 'pages':paginator.num_pages, 'results':serializer.data}, safe=False)
+    if sortby != '':
+        sort = id_map['sort']
+        
+        sample_tags = SampleTag.objects.filter(sample__in=page_samples).filter(tag__alt_name=sortby)
+        
+        sort_map = collections.defaultdict(list)
+        
+        for sample_tag in sample_tags:
+            sort_map[sample_tag.str_value].append(SampleSerializer(sample_tag.sample, read_only=True).data)
+            
+        
+        #if sort == 'd':
+        #    keys = reversed(list(sort_map.keys()))
+        #else:
+        #    keys = sort_map
+        
+        #ret = []
+        
+        #for key in keys:
+        #    block = {"name":key, "samples":[]}
+            
+        #    for sample in sort_map[key]:
+        #        d = SampleSerializer(sample, read_only=True).data
+        #        block['samples'].append(d)
+                
+        #    ret.append(block)
+        
+        
+        serializer = SampleSerializer(page_samples, many=True, read_only=True)
+        return JsonResponse({'page':page, 'pages':paginator.num_pages, 'data':sort_map}, safe=False)
     else:
-        # The old style of response which is just a list of results
-        return JsonResponse(serializer.data, safe=False)
+        serializer = SampleSerializer(page_samples, many=True, read_only=True)
+        
+        if 'page' in id_map:
+            # If we use the page param, return results in the new format
+            # that include page and pages meta data
+            return JsonResponse({'page':page, 'pages':paginator.num_pages, 'results':serializer.data, 'size':len(page_samples)}, safe=False)
+        else:
+            # The old style of response which is just a list of results
+            return JsonResponse(serializer.data, safe=False)
 
 
 def _search_samples(tag, groups, search_queue):
@@ -306,6 +348,8 @@ def search(request):
         .add('set', None, int, multiple=True) \
         .add('page', default_value=None, arg_type=int) \
         .add('records', default_value=25) \
+        .add('sortby', 'sample-person') \
+        .add('sort', 'a') \
         .parse(request)
     
     #print(id_map)

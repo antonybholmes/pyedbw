@@ -12,6 +12,7 @@ class Set(models.Model):
     class Meta:
         db_table = 'sets'
         
+
         
 class Sample(models.Model):
     experiment_id = models.IntegerField()
@@ -29,12 +30,26 @@ class Sample(models.Model):
     class Meta:
         db_table = 'samples'
         
-class SampleTags(models.Model):
+class SampleTag(models.Model):
+    sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
+    tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
+    tag_type = models.ForeignKey(TagType, on_delete=models.CASCADE)
+    str_value = models.CharField(max_length=255)
+    int_value = models.IntegerField()
+    float_value = models.FloatField()
+    created = models.DateTimeField()
+    
+    class Meta:
+        db_table = 'sample_tags'
+        
+class SampleTagsJson(models.Model):
     sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
     data = models.TextField()
 
     class Meta:
         db_table = 'sample_tags_json'
+        
+        
         
 class SetSample(models.Model):
     set = models.ForeignKey(Set, on_delete=models.CASCADE)
@@ -69,17 +84,7 @@ class SamplePerson(models.Model):
         db_table = 'sample_persons'
         
 
-class SampleTag(models.Model):
-    sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
-    tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
-    tag_type = models.ForeignKey(TagType, on_delete=models.CASCADE)
-    str_value = models.CharField(max_length=255)
-    int_value = models.IntegerField()
-    float_value = models.FloatField()
-    created = models.DateTimeField()
-    
-    class Meta:
-        db_table = 'sample_tags'
+
 
         
 #class SampleTag(models.Model):
