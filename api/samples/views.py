@@ -348,7 +348,7 @@ def search(request):
         .add('set', None, int, multiple=True) \
         .add('page', default_value=None, arg_type=int) \
         .add('records', default_value=25) \
-        .add('sortby', 'sample-person') \
+        .add('sortby', '') \
         .add('sort', 'a') \
         .parse(request)
     
