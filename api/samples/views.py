@@ -259,38 +259,18 @@ def _search_callback(key, person, user_type, id_map={}):
     
     page_samples = paginator.get_page(page)
     
-    sortby = id_map['sortby']
+    groupby = id_map['groupby']
     
-    if sortby != '':
-        sort = id_map['sort']
+    if groupby != '':
+        sample_tags = SampleTag.objects.filter(sample__in=page_samples).filter(tag__alt_name=groupby)
         
-        sample_tags = SampleTag.objects.filter(sample__in=page_samples).filter(tag__alt_name=sortby)
-        
-        sort_map = collections.defaultdict(list)
+        group_map = collections.defaultdict(list)
         
         for sample_tag in sample_tags:
-            sort_map[sample_tag.str_value].append(SampleSerializer(sample_tag.sample, read_only=True).data)
+            group_map[sample_tag.str_value].append(SampleSerializer(sample_tag.sample, read_only=True).data)
             
-        
-        #if sort == 'd':
-        #    keys = reversed(list(sort_map.keys()))
-        #else:
-        #    keys = sort_map
-        
-        #ret = []
-        
-        #for key in keys:
-        #    block = {"name":key, "samples":[]}
-            
-        #    for sample in sort_map[key]:
-        #        d = SampleSerializer(sample, read_only=True).data
-        #        block['samples'].append(d)
-                
-        #    ret.append(block)
-        
-        
         serializer = SampleSerializer(page_samples, many=True, read_only=True)
-        return JsonResponse({'page':page, 'pages':paginator.num_pages, 'data':sort_map}, safe=False)
+        return JsonResponse({'page':page, 'pages':paginator.num_pages, 'data':group_map}, safe=False)
     else:
         serializer = SampleSerializer(page_samples, many=True, read_only=True)
         
@@ -348,8 +328,7 @@ def search(request):
         .add('set', None, int, multiple=True) \
         .add('page', default_value=None, arg_type=int) \
         .add('records', default_value=25) \
-        .add('sortby', '') \
-        .add('sort', 'a') \
+        .add('groupby', '') \
         .parse(request)
     
     #print(id_map)
