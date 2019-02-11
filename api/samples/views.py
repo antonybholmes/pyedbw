@@ -259,18 +259,18 @@ def _search_callback(key, person, user_type, id_map={}):
     
     page_samples = paginator.get_page(page)
     
-    groupby = id_map['groupby']
+    sortby = id_map['sortby']
     
-    if groupby != '':
-        sample_tags = SampleTag.objects.filter(sample__in=page_samples).filter(tag__alt_name=groupby)
+    if sortby != '':
+        sample_tags = SampleTag.objects.filter(sample__in=page_samples).filter(tag__alt_name=sortby)
         
-        group_map = collections.defaultdict(list)
+        sort_map = collections.defaultdict(list)
         
         for sample_tag in sample_tags:
-            group_map[sample_tag.str_value].append(SampleSerializer(sample_tag.sample, read_only=True).data)
+            sort_map[sample_tag.str_value].append(SampleSerializer(sample_tag.sample, read_only=True).data)
             
         serializer = SampleSerializer(page_samples, many=True, read_only=True)
-        return JsonResponse({'page':page, 'pages':paginator.num_pages, 'data':group_map}, safe=False)
+        return JsonResponse({'page':page, 'pages':paginator.num_pages, 'data':sort_map}, safe=False)
     else:
         serializer = SampleSerializer(page_samples, many=True, read_only=True)
         
@@ -328,7 +328,7 @@ def search(request):
         .add('set', None, int, multiple=True) \
         .add('page', default_value=None, arg_type=int) \
         .add('records', default_value=25) \
-        .add('groupby', '') \
+        .add('sortby', '') \
         .parse(request)
     
     #print(id_map)
