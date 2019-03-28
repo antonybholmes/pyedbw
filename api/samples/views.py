@@ -330,6 +330,7 @@ def search(request):
         .add('tag', '/All') \
         .add('type', arg_type=str, multiple=True) \
         .add('person', None, int, multiple=True) \
+        .add('g', None, int, multiple=True) \
         .add('group', None, int, multiple=True) \
         .add('set', None, int, multiple=True) \
         .add('page', default_value=None, arg_type=int) \
