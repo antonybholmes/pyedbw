@@ -217,10 +217,16 @@ def _search_callback(key, person, user_type, id_map={}):
 
     search_queue = libsearch.parse_query(q)
     
+    # Groups are used to categorize samples such as by person or type
+    # to make filtering easier
+    groups = []
+    
     if 'g' in id_map:
         groups = id_map['g']
-    else:
-        groups = []
+    
+    if 'group' in id_map:
+        groups = id_map['group']
+        
     
     tag = Tag.objects.get(name=id_map['tag'])
     
@@ -240,9 +246,7 @@ def _search_callback(key, person, user_type, id_map={}):
     
     if set_samples is not None:
         # There are some samples in the sets
-        
-        sys.stderr.write('set')
-        
+ 
         if len(search_queue) == 0:
             # If user didn't search for anything, results are just
             # the selected sets
@@ -262,6 +266,8 @@ def _search_callback(key, person, user_type, id_map={}):
     sortby = id_map['sortby']
     
     if sortby != '':
+        # Alt name is a shorter version of the tag name that can be
+        # passed into a URL
         sample_tags = SampleTag.objects.filter(sample__in=page_samples).filter(tag__alt_name=sortby)
         
         sort_map = collections.defaultdict(list)
@@ -324,7 +330,7 @@ def search(request):
         .add('tag', '/All') \
         .add('type', arg_type=str, multiple=True) \
         .add('person', None, int, multiple=True) \
-        .add('g', None, int, multiple=True) \
+        .add('group', None, int, multiple=True) \
         .add('set', None, int, multiple=True) \
         .add('page', default_value=None, arg_type=int) \
         .add('records', default_value=25) \
