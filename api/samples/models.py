@@ -12,7 +12,6 @@ class Set(models.Model):
     class Meta:
         db_table = 'sets'
         
-
         
 class Sample(models.Model):
     experiment_id = models.IntegerField()
@@ -25,10 +24,12 @@ class Sample(models.Model):
     sets = models.ManyToManyField(Set, through='SetSample')
     organism_id = models.IntegerField()
     expression_type_id = models.IntegerField()
+    tags = models.TextField()
     created = models.DateTimeField('%Y-%m-%d')
 
     class Meta:
         db_table = 'samples'
+        
         
 class SampleTag(models.Model):
     sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
@@ -42,6 +43,7 @@ class SampleTag(models.Model):
     class Meta:
         db_table = 'sample_tags'
         
+        
 class SampleTagsJson(models.Model):
     sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
     data = models.TextField()
@@ -50,13 +52,13 @@ class SampleTagsJson(models.Model):
         db_table = 'sample_tags_json'
         
         
-        
 class SetSample(models.Model):
     set = models.ForeignKey(Set, on_delete=models.CASCADE)
     sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
 
     class Meta:
         db_table = 'sets_samples'
+        
         
 class GroupSample(models.Model):
     group = models.ForeignKey(Group, on_delete=models.CASCADE)
@@ -83,9 +85,6 @@ class SamplePerson(models.Model):
     class Meta:
         db_table = 'sample_persons'
         
-
-
-
         
 #class SampleTag(models.Model):
     #sample = models.ForeignKey(Sample, on_delete=models.CASCADE)

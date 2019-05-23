@@ -11,7 +11,7 @@ from api.persons.models import Person
 from api.persons.serializers import PersonSerializer
 from api.vfs.models import VFSFile
 from api.vfs.serializers import VFSFileSerializer
-from api.samples.models import Sample, Set, SampleTagsJson, TagSampleSearch, TagKeywordSearch, SampleFile, SampleTag #, SampleIntTag, SampleFloatTag
+from api.samples.models import Sample, Set, TagSampleSearch, TagKeywordSearch, SampleFile, SampleTag #, SampleIntTag, SampleFloatTag
 from api.samples.serializers import SampleSerializer, SetSerializer #, SampleTagSerializer
 from api import auth, libsearch, libcollections
 import libhttp
@@ -144,21 +144,22 @@ def _tags_to_str(sample_tags):
 def _json_to_str(tags):
     ret = ''
     
-    for tag in tags.values('data')[0]['data']:
+    for tag in tags.values('tags')[0]['tags']:
         print(tag)
         ret += '{}:{}\n'.format(tag['id'], tag['v'])
     
     return ret
 
 def _tags_callback(key, person, user_type, id_map={}):
-    tags = SampleTagsJson.objects.filter(sample_id=id_map['sample'])
+    # tags = SampleTagsJson.objects.filter(sample_id=id_map['sample'])
+    tags = Sample.objects.filter(id=id_map['sample'])
     
     if id_map['format'] == 'text':
         return HttpResponse(_json_to_str(tags), content_type='text/plain; charset=utf8')
     else:
         #print(tags.values('data')[0]['data'][0]['id'])
 
-        return JsonResponse(tags.values('data')[0]['data'], safe=False)
+        return JsonResponse(tags.values('tags')[0]['tags'], safe=False)
 
 
 def tags(request):
@@ -238,7 +239,6 @@ def _search_callback(key, person, user_type, id_map={}):
     if 'person' in id_map:
         samples = samples.filter(persons__in=id_map['person'])
         
-        
     if user_type == 'Normal':
         # filter what user can see
         samples = samples.filter(groups__person__id=person.id)
@@ -276,6 +276,7 @@ def _search_callback(key, person, user_type, id_map={}):
             sort_map[sample_tag.str_value].append(SampleSerializer(sample_tag.sample, read_only=True).data)
             
         serializer = SampleSerializer(page_samples, many=True, read_only=True)
+        
         return JsonResponse({'page':page, 'pages':paginator.num_pages, 'data':sort_map}, safe=False)
     else:
         serializer = SampleSerializer(page_samples, many=True, read_only=True)
@@ -325,19 +326,19 @@ def _search_samples(tag, groups, search_queue):
 
 def search(request):
     id_map = libhttp.ArgParser() \
-        .add('key') \
-        .add('q', '') \
-        .add('tag', '/All') \
-        .add('type', arg_type=str, multiple=True) \
-        .add('person', None, int, multiple=True) \
-        .add('g', None, int, multiple=True) \
-        .add('group', None, int, multiple=True) \
-        .add('set', None, int, multiple=True) \
-        .add('page', default_value=None, arg_type=int) \
-        .add('records', default_value=25) \
-        .add('sortby', '') \
-        .parse(request)
-    
+    .add('key') \
+    .add('q', '') \
+    .add('tag', '/All') \
+    .add('type', arg_type=str, multiple=True) \
+    .add('person', None, int, multiple=True) \
+    .add('g', None, int, multiple=True) \
+    .add('group', None, int, multiple=True) \
+    .add('set', None, int, multiple=True) \
+    .add('page', default_value=None, arg_type=int) \
+    .add('records', default_value=25) \
+    .add('sortby', '') \
+    .parse(request)
+     
     #print(id_map)
     
     return auth.auth(request, _search_callback, id_map=id_map)
