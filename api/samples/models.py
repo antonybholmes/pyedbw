@@ -1,5 +1,6 @@
 from django.db import models
 from datetime import datetime
+from api.experiments.models import Experiment
 from api.models import Tag, TagType
 from api.persons.models import Person, GroupPerson
 from api.vfs.models import VFSFile
@@ -14,7 +15,8 @@ class Set(models.Model):
         
         
 class Sample(models.Model):
-    experiment_id = models.IntegerField()
+    #experiment_id = models.IntegerField()
+    experiment = models.ForeignKey(Experiment, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     # We need this to link samples to groups so we can subsequently
     # link persons to groups and transitively, samples to persons via
@@ -148,4 +150,5 @@ class TagSampleSearch(models.Model):
 
     class Meta:
         db_table = 'tags_samples_search'
+        
 
