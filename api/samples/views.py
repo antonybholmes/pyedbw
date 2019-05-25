@@ -11,7 +11,7 @@ from api.persons.models import Person
 from api.persons.serializers import PersonSerializer
 from api.vfs.models import VFSFile
 from api.vfs.serializers import VFSFileSerializer
-from api.samples.models import Sample, Set, TagSampleSearch, TagKeywordSearch, SampleFile, SampleTag #, SampleIntTag, SampleFloatTag
+from api.samples.models import Sample, Set, SampleTagJson, TagSampleSearch, TagKeywordSearch, SampleFile, SampleTag #, SampleIntTag, SampleFloatTag
 from api.samples.serializers import SampleSerializer, SetSerializer #, SampleTagSerializer
 from api import auth, libsearch, libcollections
 import libhttp
@@ -151,8 +151,8 @@ def _json_to_str(tags):
     return ret
 
 def _tags_callback(key, person, user_type, id_map={}):
-    # tags = SampleTagsJson.objects.filter(sample_id=id_map['sample'])
-    tags = Sample.objects.filter(id=id_map['sample'])
+    tags = SampleTagJson.objects.filter(id=id_map['sample'])
+    #tags = Sample.objects.filter(id=id_map['sample'])
     
     if id_map['format'] == 'text':
         return HttpResponse(_json_to_str(tags), content_type='text/plain; charset=utf8')
@@ -222,28 +222,38 @@ def _search_callback(key, person, user_type, id_map={}):
     # to make filtering easier
     groups = []
     
+    
+    
     if 'g' in id_map:
         groups = id_map['g']
     
     if 'group' in id_map:
         groups = id_map['group']
-        
+    
+    #print('groups', groups)
     
     tag = Tag.objects.get(name=id_map['tag'])
     
     samples = _search_samples(tag, groups, search_queue)
     
+    #print('here')
+    
     if 'type' in id_map:
         samples = samples.filter(expression_type_id__in=id_map['type'])
     
+    #print('there')
+    
     if 'person' in id_map:
         samples = samples.filter(persons__in=id_map['person'])
-        
+    
+    #print('else')
+    
     if user_type == 'Normal':
+        #print('normal')
+         
         # filter what user can see
         samples = samples.filter(groups__person__id=person.id)
-        sys.stderr.write('n')
-    
+        
     if set_samples is not None:
         # There are some samples in the sets
  
@@ -258,7 +268,7 @@ def _search_callback(key, person, user_type, id_map={}):
     
     # Sort them
     samples = samples.distinct().order_by('name')
-            
+    
     paginator = Paginator(samples, records)
     
     page_samples = paginator.get_page(page)

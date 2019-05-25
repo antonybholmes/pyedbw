@@ -24,13 +24,12 @@ class Sample(models.Model):
     sets = models.ManyToManyField(Set, through='SetSample')
     organism_id = models.IntegerField()
     expression_type_id = models.IntegerField()
-    tags = models.TextField()
+    # tags = models.TextField()
     created = models.DateTimeField('%Y-%m-%d')
 
     class Meta:
         db_table = 'samples'
-        
-        
+
 class SampleTag(models.Model):
     sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
     tag = models.ForeignKey(Tag, on_delete=models.CASCADE)
@@ -42,15 +41,23 @@ class SampleTag(models.Model):
     
     class Meta:
         db_table = 'sample_tags'
-        
-        
-class SampleTagsJson(models.Model):
-    sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
-    data = models.TextField()
+                
+#class SampleTagsJson(models.Model):
+    #sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
+    #data = models.TextField()
 
+    #class Meta:
+        #db_table = 'sample_tags_json'
+ 
+class SampleTagJson(models.Model):
+    """
+    A view onto the samples table that exposes the JSON representation
+    of the samples.
+    """
+    tags = models.TextField()
+ 
     class Meta:
-        db_table = 'sample_tags_json'
-        
+        db_table = 'samples'
         
 class SetSample(models.Model):
     set = models.ForeignKey(Set, on_delete=models.CASCADE)
