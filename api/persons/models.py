@@ -1,7 +1,8 @@
 from django.db import models
 from datetime import datetime
 from api.groups.models import Group
- 
+from django.contrib.postgres.fields import JSONField     
+
 
 class Person(models.Model):
     first_name = models.CharField(max_length=255)
@@ -14,6 +15,13 @@ class Person(models.Model):
     @property
     def name(self):
         return self.first_name + " " + self.last_name
+
+    class Meta:
+        db_table = 'persons'
+        
+        
+class PersonJson(models.Model):
+    json = JSONField()
 
     class Meta:
         db_table = 'persons'

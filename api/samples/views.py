@@ -13,12 +13,12 @@ from api.vfs.models import VFSFile
 from api.vfs.serializers import VFSFileSerializer
 from api.samples.models import Sample, Set, SampleTagJson, TagSampleSearch, TagKeywordSearch, SampleFile, SampleTag #, SampleIntTag, SampleFloatTag
 from api.samples.serializers import SampleSerializer, SetSerializer #, SampleTagSerializer
-from api import auth, libsearch, libcollections
+from api import auth, libsearch, libcollections, views
+from edbw import settings
 import libhttp
 import collections
 
 SAMPLES_PER_PAGE = 50
-MAX_RECORDS_PER_PAGE = 100
 
   
 def _sample_callback(key, person, user_type, id_map={}):
@@ -151,7 +151,19 @@ def _json_to_str(tags):
     return ret
 
 def _tags_callback(key, person, user_type, id_map={}):
-    tags = SampleTagJson.objects.filter(id=id_map['sample'])
+    if 'page' in id_map:
+        page = id_map['page']
+    else:
+        page = 1
+    
+    records = min(id_map['records'], settings.MAX_RECORDS_PER_PAGE)
+
+    rows = SampleTagJson.objects.filter(id=id_map['sample']).values('json')
+    
+    paginator = Paginator(rows, records)
+    
+    page_rows = paginator.get_page(page)
+    
     #tags = Sample.objects.filter(id=id_map['sample'])
     
     if id_map['format'] == 'text':
@@ -159,7 +171,12 @@ def _tags_callback(key, person, user_type, id_map={}):
     else:
         #print(tags.values('data')[0]['data'][0]['id'])
 
-        return JsonResponse(tags.values('tags')[0]['tags'], safe=False)
+        #return JsonResponse(tags.values('tags')[0]['tags'], safe=False)
+        
+        if 'page' in id_map:
+            return views.json_page_resp('tags', page, paginator) #JsonResponse({'page':page, 'pages':paginator.num_pages, 'persons':[x['json'] for x in page_rows]}, safe=False)
+        else:
+            return views.json_resp(page_rows)
 
 
 def tags(request):
@@ -168,6 +185,8 @@ def tags(request):
         .add('sample', arg_type=int) \
         .add('tag', arg_type=int) \
         .add('format', 'json') \
+        .add('page', arg_type=int) \
+        .add('records', default_value=settings.DEFAULT_RECORDS) \
         .parse(request)
     
     return auth.auth(request, _tags_callback, id_map=id_map, check_for={'sample'})
@@ -200,7 +219,7 @@ def files(request):
 def _search_callback(key, person, user_type, id_map={}):
     
     # records per page
-    records = min(id_map['records'], MAX_RECORDS_PER_PAGE)
+    records = min(id_map['records'], settings.MAX_RECORDS_PER_PAGE)
     
     if 'page' in id_map:
         page = id_map['page']

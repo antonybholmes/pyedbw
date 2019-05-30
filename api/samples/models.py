@@ -15,8 +15,8 @@ class Set(models.Model):
         
         
 class Sample(models.Model):
-    #experiment_id = models.IntegerField()
-    experiment = models.ForeignKey(Experiment, on_delete=models.CASCADE)
+    experiment_id = models.IntegerField()
+    #experiment = models.ForeignKey(Experiment, on_delete=models.CASCADE)
     name = models.CharField(max_length=255)
     # We need this to link samples to groups so we can subsequently
     # link persons to groups and transitively, samples to persons via
@@ -56,10 +56,11 @@ class SampleTagJson(models.Model):
     A view onto the samples table that exposes the JSON representation
     of the samples.
     """
-    tags = models.TextField()
+    json = JSONField()
  
     class Meta:
         db_table = 'samples'
+        
         
 class SetSample(models.Model):
     set = models.ForeignKey(Set, on_delete=models.CASCADE)
