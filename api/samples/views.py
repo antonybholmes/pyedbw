@@ -18,39 +18,52 @@ from edbw import settings
 import libhttp
 import collections
 
-SAMPLES_PER_PAGE = 50
-
   
 def _sample_callback(key, person, user_type, id_map={}):
+    if 'page' in id_map:
+        page = id_map['page']
+    else:
+        page = 1
+    
+    records = min(id_map['records'], settings.MAX_RECORDS_PER_PAGE)
+    
     if 'sample' in id_map:
         ids = id_map['sample']
         
         if user_type != 'Normal':
-            samples = Sample.objects.filter(id__in=ids).order_by('name')
+            rows = Sample.objects.filter(id__in=ids)
         else:
-            samples = Sample.objects.filter(groups__person__id=person.id, id__in=ids).distinct().order_by('name')
+            rows = Sample.objects.filter(groups__person__id=person.id, id__in=ids).distinct()
     else:
         # return all samples
         
-        #samples = Sample.objects.all(), many=True, read_only=True)
-        
         if user_type != 'Normal':
-            samples = Sample.objects.all()
+            rows = Sample.objects.all()
         else:
             # Normal users are filtered by the groups they belong to
-            samples = Sample.objects.filter(groups__person__id=person.id)
+            rows = Sample.objects.filter(groups__person__id=person.id)
     
-    print(id_map['sample'])
+    rows = rows.order_by('name')
     
-    serializer = SampleSerializer(samples, many=True, read_only=True)
+    paginator = Paginator(rows, records)
     
-    return JsonResponse(serializer.data, safe=False)
+    page_rows = paginator.get_page(page)
+    
+    serializer = SampleSerializer(page_rows, many=True, read_only=True)
+    
+    if 'page' in id_map:
+        return JsonResponse({'page':page, 'pages':paginator.num_pages, 'samples':serializer.data}, safe=False)
+    else:
+        # The old style of response which is just a list of results
+        return JsonResponse(serializer.data, safe=False)
 
 
 def samples(request):
     id_map = libhttp.ArgParser() \
         .add('key') \
         .add('sample', None, int, multiple=True) \
+        .add('page', arg_type=int) \
+        .add('records', default_value=settings.DEFAULT_RECORDS) \
         .parse(request)
         
     #id_map = auth.parse_ids(request, 'sample')
