@@ -7,7 +7,7 @@ from django.http import JsonResponse
 from django.core import serializers
 from django.core.paginator import Paginator
 from api.models import Tag
-from api.persons.models import Person
+from api.persons.models import Person, PersonJson
 from api.persons.serializers import PersonSerializer
 from api.vfs.models import VFSFile
 from api.vfs.serializers import VFSFileSerializer
@@ -72,15 +72,35 @@ def samples(request):
 
 
 def _persons_callback(key, person, user_type, id_map={}):
-    persons = Person.objects.filter(sampleperson__sample__in=id_map['sample'])
+    if 'page' in id_map:
+        page = id_map['page']
+    else:
+        page = 1
     
-    serializer = PersonSerializer(persons, many=True, read_only=True)
+    records = min(id_map['records'], settings.MAX_RECORDS_PER_PAGE)
     
-    return JsonResponse(serializer.data, safe=False)    
+    rows = Person.objects.filter(sampleperson__sample__in=id_map['sample'])
+    
+    paginator = Paginator(rows, records)
+    
+    page_rows = paginator.get_page(page)
+    
+    serializer = PersonSerializer(page_rows, many=True, read_only=True)
+    
+    if 'page' in id_map:
+        return JsonResponse({'page':page, 'pages':paginator.num_pages, 'persons':serializer.data}, safe=False)
+    else:
+        # The old style of response which is just a list of results
+        return JsonResponse(serializer.data, safe=False)
 
 
 def persons(request):
-    id_map = auth.parse_ids(request, 'sample')
+    id_map = libhttp.ArgParser() \
+        .add('key') \
+        .add('sample', None, int, multiple=True) \
+        .add('page', arg_type=int) \
+        .add('records', default_value=settings.DEFAULT_RECORDS) \
+        .parse(request)
     
     return auth.auth(request, _persons_callback, id_map=id_map, check_for={'sample'})
     
@@ -162,6 +182,7 @@ def _json_to_str(tags):
         ret += '{}:{}\n'.format(tag['id'], tag['v'])
     
     return ret
+    
 
 def _tags_callback(key, person, user_type, id_map={}):
     if 'page' in id_map:
@@ -253,8 +274,6 @@ def _search_callback(key, person, user_type, id_map={}):
     # Groups are used to categorize samples such as by person or type
     # to make filtering easier
     groups = []
-    
-    
     
     if 'g' in id_map:
         groups = id_map['g']

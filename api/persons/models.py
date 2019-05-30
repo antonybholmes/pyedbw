@@ -22,6 +22,7 @@ class Person(models.Model):
         
 class PersonJson(models.Model):
     json = JSONField()
+    groups = models.ManyToManyField(Group, through='GroupPerson')
 
     class Meta:
         db_table = 'persons'

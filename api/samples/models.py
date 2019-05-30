@@ -2,7 +2,7 @@ from django.db import models
 from datetime import datetime
 from api.experiments.models import Experiment
 from api.models import Tag, TagType
-from api.persons.models import Person, GroupPerson
+from api.persons.models import Person, PersonJson, GroupPerson
 from api.vfs.models import VFSFile
 from api.groups.models import Group
 from django.contrib.postgres.fields import JSONField
