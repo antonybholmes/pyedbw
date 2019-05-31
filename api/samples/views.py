@@ -221,7 +221,7 @@ def _tags_callback(key, person, user_type, id_map={}):
         #return JsonResponse(tags.values('tags')[0]['tags'], safe=False)
         
         if page > 0:
-            data = JsonResponse({'page':page, 'pages':paginator.num_pages, 'tags':rows[0]['json']}, safe=False)
+            data = JsonResponse({'page':page, 'pages':1, 'tags':rows[0]['json']}, safe=False)
         else:
             data = JsonResponse(rows[0]['json'], safe=False) #views.json_resp(paginator.get_page(1))
             
