@@ -321,9 +321,6 @@ def _search_callback(key, person, user_type, id_map={}):
         print('Using cache of', cache_key)
         return data
         
-    if page == -1:
-        page = 1
-        
     search_queue = libsearch.parse_query(q)
     
     #print('groups', groups)
@@ -361,30 +358,33 @@ def _search_callback(key, person, user_type, id_map={}):
     
     paginator = Paginator(samples, records)
     
-    page_samples = paginator.get_page(page)
+    if page > 0:
+        page_rows = paginator.get_page(page)
+    else:
+        page_rows = paginator.get_page(1)
     
     sortby = id_map['sortby']
     
     if sortby != '':
         # Alt name is a shorter version of the tag name that can be
         # passed into a URL
-        sample_tags = SampleTag.objects.filter(sample__in=page_samples).filter(tag__alt_name=sortby)
+        sample_tags = SampleTag.objects.filter(sample__in=page_rows).filter(tag__alt_name=sortby)
         
         sort_map = collections.defaultdict(list)
         
         for sample_tag in sample_tags:
             sort_map[sample_tag.str_value].append(SampleSerializer(sample_tag.sample, read_only=True).data)
             
-        serializer = SampleSerializer(page_samples, many=True, read_only=True)
+        #serializer = SampleSerializer(page_rows, many=True, read_only=True)
         
         data = JsonResponse({'page':page, 'pages':paginator.num_pages, 'data':sort_map}, safe=False)
     else:
-        serializer = SampleSerializer(page_samples, many=True, read_only=True)
+        serializer = SampleSerializer(page_rows, many=True, read_only=True)
         
-        if 'page' in id_map:
+        if page > 0:
             # If we use the page param, return results in the new format
             # that include page and pages meta data
-            data = JsonResponse({'page':page, 'pages':paginator.num_pages, 'results':serializer.data, 'size':len(page_samples)}, safe=False)
+            data = JsonResponse({'page':page, 'pages':paginator.num_pages, 'results':serializer.data, 'size':len(page_rows)}, safe=False)
         else:
             # The old style of response which is just a list of results
             data = JsonResponse(serializer.data, safe=False)
