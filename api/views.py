@@ -12,7 +12,7 @@ def json_page_resp(name, page, paginator):
     
     page_rows = paginator.get_page(page)
     
-    return JsonResponse({'page':page, 'pages':paginator.num_pages, name:[x['json'] for x in page_rows]}, safe=False)
+    return JsonResponse({'page':page, 'pages':paginator.num_pages, name:[x['json'] for x in page_rows], 'size':len(page_rows)}, safe=False)
 
 
 def json_resp(rows):

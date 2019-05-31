@@ -1,4 +1,5 @@
 from django.shortcuts import render
+from django.core.cache import cache
 from django.http import HttpResponse
 from django.http import JsonResponse
 from django.core import serializers
@@ -22,25 +23,35 @@ def ls_callback(key, person, user_type, id_map={}):
     if 'page' in id_map:
         page = id_map['page']
     else:
-        page = 1
+        page = -1
     
     records = min(id_map['records'], settings.MAX_RECORDS_PER_PAGE)
-    sortby = id_map['sortby']
+    
     
     if 'parent' in id_map:
         pid = id_map['parent']
-        rows = VFSFileJson.objects.filter(parent_id=pid).order_by(sortby).values('json')
     else:
-        rows = VFSFileJson.objects.order_by(sortby).values('json')
+        pid = -1
     
+    cache_key = '_'.join(['vfs', str(pid), str(page), str(records)])
+        
+    data = cache.get(cache_key) # returns None if no key-value pair
+    
+    # shortcut and return cached copy
+    if data is not None:
+        #print('Using vfs cache of', cache_key)
+        return data
+    
+    sortby = id_map['sortby']
+    
+    rows = VFSFileJson.objects.filter(parent_id=pid).order_by(sortby).values('json')
+
     paginator = Paginator(rows, records)
     
-    page_rows = paginator.get_page(page)
-    
-    if 'page' in id_map:
+    if page > 0:
         return views.json_page_resp('files', page, paginator) #return JsonResponse({'page':page, 'pages':paginator.num_pages, 'files':[x['json'] for x in page_rows]}, safe=False)
     else:
-        return views.json_resp(page_rows)
+        return views.json_resp(paginator.get_page(1))
 
 
 def ls(request):
@@ -55,12 +66,12 @@ def ls(request):
     """
     
     id_map = libhttp.ArgParser() \
-    .add('key') \
-    .add('parent', default_value=None, arg_type=int) \
-    .add('page', arg_type=int) \
-    .add('records', default_value=100) \
-    .add('sortby', default_value='id') \
-    .parse(request)
+        .add('key') \
+        .add('parent', default_value=None, arg_type=int) \
+        .add('page', arg_type=int) \
+        .add('records', default_value=100) \
+        .add('sortby', default_value='id') \
+        .parse(request)
     
     return auth.auth(request, ls_callback, id_map=id_map, pkey_only=False)
 

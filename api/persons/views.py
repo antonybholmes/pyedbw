@@ -13,7 +13,7 @@ def persons_callback(key, person, user_type, id_map={}):
     if 'page' in id_map:
         page = id_map['page']
     else:
-        page = 1
+        page = -1
     
     records = min(id_map['records'], settings.MAX_RECORDS_PER_PAGE)
 
@@ -25,13 +25,11 @@ def persons_callback(key, person, user_type, id_map={}):
         rows = PersonJson.objects.all().values('json')
     
     paginator = Paginator(rows, records)
-    
-    page_rows = paginator.get_page(page)
-    
-    if 'page' in id_map:
+     
+    if page > 0:
         return views.json_page_resp('persons', page, paginator) #JsonResponse({'page':page, 'pages':paginator.num_pages, 'persons':[x['json'] for x in page_rows]}, safe=False)
     else:
-        return views.json_resp(page_rows)
+        return views.json_resp(paginator.get_page(1))
 
 
 def persons(request):

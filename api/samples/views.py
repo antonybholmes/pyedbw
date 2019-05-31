@@ -1,6 +1,7 @@
 import sys
 import collections
 
+from django.core.cache import cache
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.http import JsonResponse
@@ -188,29 +189,45 @@ def _tags_callback(key, person, user_type, id_map={}):
     if 'page' in id_map:
         page = id_map['page']
     else:
-        page = 1
+        page = -1
     
+    sample = id_map['sample']
     records = min(id_map['records'], settings.MAX_RECORDS_PER_PAGE)
+    f = id_map['format']
+    
+    cache_key = '_'.join(['tags',
+        str(sample), 
+        str(page),
+        str(records),
+        f]) # needs to be unique
+        
+    data = cache.get(cache_key) # returns None if no key-value pair
+    
+    # shortcut and return cached copy
+    if data is not None:
+        #print('Using tag cache of', cache_key)
+        return data
+    
 
-    rows = SampleTagJson.objects.filter(id=id_map['sample']).values('json')
-    
-    paginator = Paginator(rows, records)
-    
-    page_rows = paginator.get_page(page)
-    
-    #tags = Sample.objects.filter(id=id_map['sample'])
-    
-    if id_map['format'] == 'text':
-        return HttpResponse(_json_to_str(tags), content_type='text/plain; charset=utf8')
+    if f == 'text':
+        data = HttpResponse(_json_to_str(Sample.objects.filter(id=sample)), content_type='text/plain; charset=utf8')
     else:
+        rows = SampleTagJson.objects.filter(id=sample).values('json')
+    
+        #paginator = Paginator(rows, records)
+    
         #print(tags.values('data')[0]['data'][0]['id'])
 
         #return JsonResponse(tags.values('tags')[0]['tags'], safe=False)
         
-        if 'page' in id_map:
-            return views.json_page_resp('tags', page, paginator) #JsonResponse({'page':page, 'pages':paginator.num_pages, 'persons':[x['json'] for x in page_rows]}, safe=False)
+        if page > 0:
+            data = JsonResponse({'page':page, 'pages':paginator.num_pages, 'tags':rows[0]['json']}, safe=False)
         else:
-            return views.json_resp(page_rows)
+            data = JsonResponse(rows[0]['json'], safe=False) #views.json_resp(paginator.get_page(1))
+            
+    cache.set(cache_key, data, settings.CACHE_TIME_S)
+        
+    return data
 
 
 def tags(request):
@@ -251,26 +268,13 @@ def files(request):
     
     
 def _search_callback(key, person, user_type, id_map={}):
-    
     # records per page
     records = min(id_map['records'], settings.MAX_RECORDS_PER_PAGE)
-    
-    if 'page' in id_map:
-        page = id_map['page']
-    else:
-        page = 1
-    
-    if 'set' in id_map:
-        set_samples = Sample.objects.filter(sets__in=id_map['set']) #.distinct().order_by('name')
-    else:
-        set_samples = None
-        
+      
     # The search query
     
     q = id_map['q']
 
-    search_queue = libsearch.parse_query(q)
-    
     # Groups are used to categorize samples such as by person or type
     # to make filtering easier
     groups = []
@@ -280,6 +284,47 @@ def _search_callback(key, person, user_type, id_map={}):
     
     if 'group' in id_map:
         groups = id_map['group']
+        
+    if 'type' in id_map:
+        types = id_map['type']
+    else:
+        types = []
+        
+    if 'person' in id_map:
+        persons = id_map['person']
+    else:
+        persons = []
+        
+    if 'page' in id_map:
+        page = id_map['page']
+    else:
+        page = -1
+    
+    if 'set' in id_map:
+        sets = id_map['set']
+    else:
+        sets = []
+    
+    cache_key = '_'.join(['q',
+        q, 
+        str(page), 
+        str(records),
+        ':'.format(groups), 
+        ':'.format(types), 
+        ':'.format(persons),
+        ':'.format(sets)]) # needs to be unique
+        
+    data = cache.get(cache_key) # returns None if no key-value pair
+    
+    # shortcut and return cached copy
+    if data is not None:
+        print('Using cache of', cache_key)
+        return data
+        
+    if page == -1:
+        page = 1
+        
+    search_queue = libsearch.parse_query(q)
     
     #print('groups', groups)
     
@@ -287,27 +332,21 @@ def _search_callback(key, person, user_type, id_map={}):
     
     samples = _search_samples(tag, groups, search_queue)
     
-    #print('here')
+    if len(types) > 0:
+        samples = samples.filter(expression_type_id__in=types)
     
-    if 'type' in id_map:
-        samples = samples.filter(expression_type_id__in=id_map['type'])
-    
-    #print('there')
-    
-    if 'person' in id_map:
-        samples = samples.filter(persons__in=id_map['person'])
-    
-    #print('else')
-    
+    if len(persons) > 0:
+        samples = samples.filter(persons__in=persons)
+
     if user_type == 'Normal':
         #print('normal')
          
         # filter what user can see
         samples = samples.filter(groups__person__id=person.id)
+    
+    if len(sets) > 0:
+        set_samples = Sample.objects.filter(sets__in=sets) #.distinct().order_by('name')
         
-    if set_samples is not None:
-        # There are some samples in the sets
- 
         if len(search_queue) == 0:
             # If user didn't search for anything, results are just
             # the selected sets
@@ -338,17 +377,21 @@ def _search_callback(key, person, user_type, id_map={}):
             
         serializer = SampleSerializer(page_samples, many=True, read_only=True)
         
-        return JsonResponse({'page':page, 'pages':paginator.num_pages, 'data':sort_map}, safe=False)
+        data = JsonResponse({'page':page, 'pages':paginator.num_pages, 'data':sort_map}, safe=False)
     else:
         serializer = SampleSerializer(page_samples, many=True, read_only=True)
         
         if 'page' in id_map:
             # If we use the page param, return results in the new format
             # that include page and pages meta data
-            return JsonResponse({'page':page, 'pages':paginator.num_pages, 'results':serializer.data, 'size':len(page_samples)}, safe=False)
+            data = JsonResponse({'page':page, 'pages':paginator.num_pages, 'results':serializer.data, 'size':len(page_samples)}, safe=False)
         else:
             # The old style of response which is just a list of results
-            return JsonResponse(serializer.data, safe=False)
+            data = JsonResponse(serializer.data, safe=False)
+            
+    cache.set(cache_key, data, settings.CACHE_TIME_S)
+        
+    return data
 
 
 def _search_samples(tag, groups, search_queue):
@@ -387,18 +430,18 @@ def _search_samples(tag, groups, search_queue):
 
 def search(request):
     id_map = libhttp.ArgParser() \
-    .add('key') \
-    .add('q', '') \
-    .add('tag', '/All') \
-    .add('type', arg_type=str, multiple=True) \
-    .add('person', None, int, multiple=True) \
-    .add('g', None, int, multiple=True) \
-    .add('group', None, int, multiple=True) \
-    .add('set', None, int, multiple=True) \
-    .add('page', default_value=None, arg_type=int) \
-    .add('records', default_value=25) \
-    .add('sortby', '') \
-    .parse(request)
+        .add('key') \
+        .add('q', '') \
+        .add('tag', '/All') \
+        .add('type', arg_type=str, multiple=True) \
+        .add('person', None, int, multiple=True) \
+        .add('g', None, int, multiple=True) \
+        .add('group', None, int, multiple=True) \
+        .add('set', None, int, multiple=True) \
+        .add('page', arg_type=int) \
+        .add('records', default_value=settings.DEFAULT_RECORDS) \
+        .add('sortby', '') \
+        .parse(request)
      
     #print(id_map)
     
