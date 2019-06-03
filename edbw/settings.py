@@ -126,7 +126,7 @@ STATIC_URL = '/static/'
         #'ENGINE': 'django.db.backends.postgresql_psycopg2',
         #'NAME': 'edbw',
         #'USER': 'edbw',
-        #'PASSWORD': 'TwinkleToe007',
+        #'PASSWORD': '**** REMOVED ****',
         #'HOST': '52.206.44.241',
         #'PORT': '5432',
     #}
