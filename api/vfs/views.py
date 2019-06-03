@@ -49,9 +49,13 @@ def ls_callback(key, person, user_type, id_map={}):
     paginator = Paginator(rows, records)
     
     if page > 0:
-        return views.json_page_resp('files', page, paginator) #return JsonResponse({'page':page, 'pages':paginator.num_pages, 'files':[x['json'] for x in page_rows]}, safe=False)
+        data = views.json_page_resp('files', page, paginator) #return JsonResponse({'page':page, 'pages':paginator.num_pages, 'files':[x['json'] for x in page_rows]}, safe=False)
     else:
-        return views.json_resp(paginator.get_page(1))
+        data = views.json_resp(paginator.get_page(1))
+        
+    cache.set(cache_key, data, settings.CACHE_TIME_S)
+        
+    return data
 
 
 def ls(request):

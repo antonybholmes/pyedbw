@@ -205,7 +205,7 @@ def _tags_callback(key, person, user_type, id_map={}):
     
     # shortcut and return cached copy
     if data is not None:
-        #print('Using tag cache of', cache_key)
+        print('Using tag cache of', cache_key)
         return data
     
 
