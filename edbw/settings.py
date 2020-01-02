@@ -11,6 +11,10 @@ https://docs.djangoproject.com/en/2.1/ref/settings/
 """
 
 import os
+import json
+
+
+config = json.load(open('settings.json', 'r'))
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -20,12 +24,12 @@ BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
 # See https://docs.djangoproject.com/en/2.1/howto/deployment/checklist/
 
 # SECURITY WARNING: keep the secret key used in production secret!
-SECRET_KEY = '**** REMOVED ****'
+SECRET_KEY = config['secret_key']
 
 # SECURITY WARNING: don't run with debug turned on in production!
 DEBUG = True
 
-ALLOWED_HOSTS = ['localhost', '52.206.83.98', 'edbw']
+ALLOWED_HOSTS = config['hosts']
 
 
 # Application definition
@@ -39,6 +43,8 @@ INSTALLED_APPS = [
     'django.contrib.staticfiles',
     'api',
 ]
+
+AUTH_USER_MODEL = 'api.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',
@@ -55,7 +61,7 @@ ROOT_URLCONF = 'edbw.urls'
 TEMPLATES = [
     {
         'BACKEND': 'django.template.backends.django.DjangoTemplates',
-        'DIRS': [],
+        'DIRS': [os.path.join(BASE_DIR, 'templates')],
         'APP_DIRS': True,
         'OPTIONS': {
             'context_processors': [
@@ -101,6 +107,13 @@ AUTH_PASSWORD_VALIDATORS = [
 ]
 
 
+PASSWORD_HASHERS = [
+    'django.contrib.auth.hashers.Argon2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2PasswordHasher',
+    'django.contrib.auth.hashers.PBKDF2SHA1PasswordHasher',
+    'django.contrib.auth.hashers.BCryptSHA256PasswordHasher',
+]
+
 # Internationalization
 # https://docs.djangoproject.com/en/2.1/topics/i18n/
 
@@ -134,12 +147,12 @@ STATIC_URL = '/static/'
 
 DATABASES = {
     'default': {
-        'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        'NAME': 'edbw',
-        'USER': 'edbw',
-        'PASSWORD': '**** REMOVED ****',
-        'HOST': '18.209.96.125',
-        'PORT': '5432',
+        'ENGINE': config['postgresql']['engine'],
+        'NAME': config['postgresql']['name'],
+        'USER': config['postgresql']['user'],
+        'PASSWORD': config['postgresql']['password'],
+        'HOST': config['postgresql']['host'],
+        'PORT': config['postgresql']['port'],
     }
 }
 
@@ -154,10 +167,10 @@ DATABASES = {
 CACHES = {
     'default': {
         'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': 'redis://52.20.36.165:6379/1',
-	'OPTIONS': {
+        'LOCATION': config['redis']['location'],
+        'OPTIONS': {
             'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'PASSWORD': '**** REMOVED ****',
+            'PASSWORD': config['redis']['password'],
         }
     }
 }
@@ -165,6 +178,8 @@ CACHES = {
 
 DATA_DIR = '/home/antony/Desktop/geb_test' #'/ifs/scratch/cancer/Lab_RDF/experiment_store/data'
 SEQ_DIR = '/home/antony/Desktop/data_dir'
+
+AWS_BUCKET = config['aws_bucket']
 
 
 DEFAULT_RECORDS = 100
