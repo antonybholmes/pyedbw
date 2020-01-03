@@ -17,4 +17,5 @@ urlpatterns = [
     path('account/', include('api.account.urls')),
     path('admin/', include('api.admin.urls')),
     path('about', views.about, name='about'),
+    path('test', views.test, name='test')
 ]

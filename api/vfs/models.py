@@ -8,19 +8,20 @@ class VFSFile(models.Model):
     path = models.CharField(max_length=255)
     type_id = models.IntegerField()
     created = models.DateTimeField()
-
-    class Meta:
-        db_table = 'vfs'
-        
-        
-class VFSFileJson(models.Model):
-    # field required for filtering by parent (i.e. listing the
-    # contents of a folder).
-    parent_id = models.IntegerField()
-    
     json = JSONField()
 
     class Meta:
         db_table = 'vfs'
+        
+        
+#class VFSFileJson(models.Model):
+#    # field required for filtering by parent (i.e. listing the
+#    # contents of a folder).
+#    parent_id = models.IntegerField()
+#    
+#    json = JSONField()
+#
+#    class Meta:
+#        db_table = 'vfs'
         
         

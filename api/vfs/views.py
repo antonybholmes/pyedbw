@@ -4,7 +4,7 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from django.core import serializers
 from django.core.paginator import Paginator
-from api.vfs.models import VFSFile, VFSFileJson
+from api.vfs.models import VFSFile
 from api.vfs.serializers import VFSFileSerializer
 from api import auth, views
 from api import libcollections
@@ -44,7 +44,7 @@ def ls_callback(key, person, user_type, id_map={}):
     
     sortby = id_map['sortby']
     
-    rows = VFSFileJson.objects.filter(parent_id=pid).order_by(sortby).values('json')
+    rows = VFSFile.objects.filter(parent_id=pid).order_by(sortby).values('json')
 
     paginator = Paginator(rows, records)
     

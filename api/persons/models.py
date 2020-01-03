@@ -11,6 +11,7 @@ class Person(models.Model):
     groups = models.ManyToManyField(Group, through='GroupPerson')
     api_key = models.CharField(max_length=64)
     created = models.DateTimeField()
+    json = JSONField()
 
     @property
     def name(self):
@@ -20,12 +21,12 @@ class Person(models.Model):
         db_table = 'persons'
         
         
-class PersonJson(models.Model):
-    json = JSONField()
-    groups = models.ManyToManyField(Group, through='GroupPerson')
-
-    class Meta:
-        db_table = 'persons'
+#class PersonJson(models.Model):
+#    json = JSONField()
+#    groups = models.ManyToManyField(Group, through='GroupPerson')
+#
+#    class Meta:
+#        db_table = 'persons'
 
 
 class GroupPerson(models.Model):
@@ -35,3 +36,6 @@ class GroupPerson(models.Model):
 
     class Meta:
         db_table = 'groups_persons'
+
+
+

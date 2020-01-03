@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from django.core import serializers
 from django.core.paginator import Paginator
-from api.groups.models import Group, GroupJson
+from api.groups.models import Group
 from api.groups.serializers import GroupSerializer
 from api import auth, views
 from edbw import settings
@@ -23,7 +23,7 @@ def groups_callback(key, person, user_type, id_map={}):
     
     records = min(id_map['records'], settings.MAX_RECORDS_PER_PAGE)
     
-    rows = GroupJson.objects.all().values('json')
+    rows = Group.objects.all().values('json')
     
     paginator = Paginator(rows, records)
      

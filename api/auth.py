@@ -1,6 +1,8 @@
 from api.persons.models import Person
 from django.http import JsonResponse
+from django.core.exceptions import PermissionDenied
 import re
+import base64
 
 EMPTY_JSON_LIST = JsonResponse([], safe=False)
 
@@ -11,10 +13,15 @@ def empty_list_callback():
     """
     Default error function
     """
-    return EMPTY_JSON_LIST
+    raise PermissionDenied #EMPTY_JSON_LIST
 
 
-def auth(request, callback, error_callback=empty_list_callback, id_map=None, check_for=None, pkey_only=True):
+def auth(request, 
+         callback, 
+         error_callback=empty_list_callback, 
+         id_map=None, 
+         check_for=None, 
+         pkey_only=True):
     """
     Checks an api key in the database matches a person and if so
     runs callback, otherwise returns an error response.
@@ -38,13 +45,23 @@ def auth(request, callback, error_callback=empty_list_callback, id_map=None, che
         JSON string of results
     """
     
+    key = None
     
-    
-    if 'key' not in request.GET:
+    if 'Authorization' in request.headers:
+        # Priortize getting api key from header using http basic auth
+        
+        # decode key from auth request. First element is type e.g. basic
+        # and second element is base64 encoded key
+        _, value = request.headers['Authorization'].split(' ')
+        key, _ = base64.b64decode(value).decode('utf-8').split(':')
+    else:
+        # Attempt to get key from URL
+        key = request.GET.get('key', None)
+        
+    if key is None:
         print('no key')
         return error_callback()
-    
-    key = request.GET['key']
+ 
     
     if isinstance(check_for, set):
         for id in check_for:
@@ -57,7 +74,6 @@ def auth(request, callback, error_callback=empty_list_callback, id_map=None, che
             for id in values:
                 # test all int ids for being valid, ignore strings etc
                 if pkey_only and isinstance(id, int) and id < 1:
-                    print(id, 'is invalid int')
                     return error_callback()
         elif isinstance(values, int):
             id = values
@@ -66,14 +82,12 @@ def auth(request, callback, error_callback=empty_list_callback, id_map=None, che
         else:
             pass
  
-    
-    
     persons = Person.objects.filter(api_key=key)
-    person = persons[0]
-    
-    user_type = get_user_type(person)
     
     if len(persons) > 0:
+        person = persons[0]
+        user_type = get_user_type(person)
+    
         # If there is a person send it to the callback
         return callback(key, persons[0], user_type, id_map=id_map)
     else:
@@ -201,7 +215,9 @@ def parse_params(request, *args, **kwargs):
         else:
             # arg seems invalid so skip it
             continue
-            
+        
+        print(request.GET)
+        
         if name in request.GET:
             # if the sample id is present, pass it along
             values = [parse_arg(x) for x in request.GET.getlist(name)]

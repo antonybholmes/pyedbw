@@ -1,0 +1,17 @@
+{
+    "postgresql": {
+        "engine":"django.db.backends.postgresql_psycopg2",
+        "name":"edbw",
+        "user":"edbw",
+        "password":"261t8vzBmdYy3YG2",
+        "host":"18.209.96.125",
+        "port":5432
+    },
+    "redis":{    
+        "location":"redis://52.20.36.165:6379/1",
+        "password":"ahXob9au3hu3fi4su4ci3HouRivu9chi"
+    },
+    "aws": {
+        "bucket":"lab-rdf-app-data/edbw"
+    }
+}

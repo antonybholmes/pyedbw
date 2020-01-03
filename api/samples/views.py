@@ -8,11 +8,11 @@ from django.http import JsonResponse
 from django.core import serializers
 from django.core.paginator import Paginator
 from api.models import Tag
-from api.persons.models import Person, PersonJson
+from api.persons.models import Person
 from api.persons.serializers import PersonSerializer
 from api.vfs.models import VFSFile
 from api.vfs.serializers import VFSFileSerializer
-from api.samples.models import Sample, Set, SampleTagJson, TagSampleSearch, TagKeywordSearch, SampleFile, SampleTag #, SampleIntTag, SampleFloatTag
+from api.samples.models import Sample, Set, TagSampleSearch, TagKeywordSearch, SampleFile, SampleTag #, SampleIntTag, SampleFloatTag
 from api.samples.serializers import SampleSerializer, SetSerializer #, SampleTagSerializer
 from api import auth, libsearch, libcollections, views
 from edbw import settings
@@ -60,6 +60,9 @@ def _sample_callback(key, person, user_type, id_map={}):
 
 
 def samples(request):
+    print('samples')
+ 
+    
     id_map = libhttp.ArgParser() \
         .add('key') \
         .add('sample', None, int, multiple=True) \
@@ -68,7 +71,8 @@ def samples(request):
         .parse(request)
         
     #id_map = auth.parse_ids(request, 'sample')
- 
+    
+    
     return auth.auth(request, _sample_callback, id_map=id_map)
 
 
@@ -204,15 +208,11 @@ def _tags_callback(key, person, user_type, id_map={}):
     data = cache.get(cache_key) # returns None if no key-value pair
     
     # shortcut and return cached copy
-    if data is not None:
-        print('Using tag cache of', cache_key)
-        return data
-    
-
-    if f == 'text':
-        data = HttpResponse(_json_to_str(Sample.objects.filter(id=sample)), content_type='text/plain; charset=utf8')
-    else:
-        rows = SampleTagJson.objects.filter(id=sample).values('json')
+    if data is None:
+        #if f == 'text':
+        #    data = HttpResponse(_json_to_str(Sample.objects.filter(id=sample)), content_type='text/plain; charset=utf8')
+        #else:
+        rows = SampleTag.objects.filter(id=sample).values('json')
     
         #paginator = Paginator(rows, records)
     
@@ -221,11 +221,11 @@ def _tags_callback(key, person, user_type, id_map={}):
         #return JsonResponse(tags.values('tags')[0]['tags'], safe=False)
         
         if page > 0:
-            data = JsonResponse({'page':page, 'pages':1, 'tags':rows[0]['json']}, safe=False)
+            data = JsonResponse({'page':1, 'pages':1, 'tags':rows[0]['json']}, safe=False)
         else:
             data = JsonResponse(rows[0]['json'], safe=False) #views.json_resp(paginator.get_page(1))
-            
-    cache.set(cache_key, data, settings.CACHE_TIME_S)
+                
+        cache.set(cache_key, data, settings.CACHE_TIME_S)
         
     return data
 

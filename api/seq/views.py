@@ -43,11 +43,17 @@ def counts_callback(key, person, user_type, id_map=None):
         
     sub_dir = sub_dirs[0].path
         
-    dir = settings.DATA_DIR + sub_dir #os.path.join(settings.SEQ_DIR, sub_dir) #str(id))
+    #dir = settings.DATA_DIR + sub_dir #os.path.join(settings.SEQ_DIR, sub_dir) #str(id))
+    
+    dir = settings.AWS_BUCKET + sub_dir
+    
+    print(dir)
     
     bin_width = id_map['bw']
     
-    bcr = libseq.BinCountReader(dir, genome=genome, mode=mode)
+    #bcr = libseq.BinCountReader(dir, genome=genome, mode=mode)
+    bcr = libseq.S3BinCountReader(dir, genome=genome, mode=mode)
+    
     counts = bcr.get_counts(loc, bin_width=bin_width)
     
     f = id_map['format']

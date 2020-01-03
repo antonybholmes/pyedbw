@@ -14,7 +14,7 @@ import os
 import json
 
 
-config = json.load(open('settings.json', 'r'))
+config = json.load(open('edbw/settings.json', 'r'))
 
 # Build paths inside the project like this: os.path.join(BASE_DIR, ...)
 BASE_DIR = os.path.dirname(os.path.dirname(os.path.abspath(__file__)))
@@ -133,17 +133,6 @@ USE_TZ = True
 
 STATIC_URL = '/static/'
 
-
-#DATABASES = {
-    #'default': {
-        #'ENGINE': 'django.db.backends.postgresql_psycopg2',
-        #'NAME': 'edbw',
-        #'USER': 'edbw',
-        #'PASSWORD': '**** REMOVED ****',
-        #'HOST': '52.206.44.241',
-        #'PORT': '5432',
-    #}
-#}
 
 DATABASES = {
     'default': {

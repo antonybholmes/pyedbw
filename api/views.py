@@ -1,6 +1,7 @@
 from django.shortcuts import render
 from django.http import HttpResponse
 from django.http import JsonResponse
+import base64
 
 def about(request):
     return JsonResponse({"name":"edbw","version":"10.0","copyright":"Copyright (C) 2014-2019 Antony Holmes"}, safe=False)
@@ -21,3 +22,11 @@ def json_resp(rows):
     """
     
     return JsonResponse([x['json'] for x in rows], safe=False)
+
+
+
+def test(request):
+    print(request.META)
+    print(base64.b64decode(request.headers['Authorization'][6:]))
+    print(base64.b64decode(request.headers['Authorization'].split(' ')[1]).decode('utf-8').split(':'))
+    return JsonResponse(request.headers, safe=False)

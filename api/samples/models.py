@@ -2,7 +2,7 @@ from django.db import models
 from datetime import datetime
 from api.experiments.models import Experiment
 from api.models import Tag, TagType
-from api.persons.models import Person, PersonJson, GroupPerson
+from api.persons.models import Person, GroupPerson
 from api.vfs.models import VFSFile
 from api.groups.models import Group
 from django.contrib.postgres.fields import JSONField
@@ -40,6 +40,7 @@ class SampleTag(models.Model):
     int_value = models.IntegerField()
     float_value = models.FloatField()
     created = models.DateTimeField()
+    json = JSONField()
     
     class Meta:
         db_table = 'sample_tags'
@@ -51,15 +52,15 @@ class SampleTag(models.Model):
     #class Meta:
         #db_table = 'sample_tags_json'
  
-class SampleTagJson(models.Model):
-    """
-    A view onto the samples table that exposes the JSON representation
-    of the samples.
-    """
-    json = JSONField()
- 
-    class Meta:
-        db_table = 'samples'
+#class SampleTagJson(models.Model):
+#    """
+#    A view onto the samples table that exposes the JSON representation
+#    of the samples.
+#    """
+#    json = JSONField()
+# 
+#    class Meta:
+#        db_table = 'samples'
         
         
 class SetSample(models.Model):

@@ -3,7 +3,7 @@ from django.http import HttpResponse
 from django.http import JsonResponse
 from django.core import serializers
 from django.core.paginator import Paginator
-from api.persons.models import Person, PersonJson
+from api.persons.models import Person
 from api.persons.serializers import PersonSerializer
 from api import auth, views
 from edbw import settings
@@ -20,9 +20,9 @@ def persons_callback(key, person, user_type, id_map={}):
     if 'id' in id_map:
         ids = id_map['id']
         
-        rows = PersonJson.objects.filter(id__in=ids).values('json')
+        rows = Person.objects.filter(id__in=ids).values('json')
     else:
-        rows = PersonJson.objects.all().values('json')
+        rows = Person.objects.all().values('json')
     
     paginator = Paginator(rows, records)
      
