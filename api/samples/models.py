@@ -26,8 +26,8 @@ class Sample(models.Model):
     sets = models.ManyToManyField(Set, through='SetSample')
     organism_id = models.IntegerField()
     expression_type_id = models.IntegerField()
-    # tags = models.TextField()
     created = models.DateTimeField('%Y-%m-%d')
+    json = JSONField()
 
     class Meta:
         db_table = 'samples'

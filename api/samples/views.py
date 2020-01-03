@@ -148,21 +148,7 @@ def _append_tags(sample_tags, ret):
             tag['v'] = sample_tag.str_value
             
         ret.append(tag)
-        
-def _append_tags(sample_tags, ret):
-    for sample_tag in sample_tags:
-        tag = {} #collections.OrderedDict()
-        
-        tag['id'] = sample_tag.tag.id
-        
-        if sample_tag.tag_type.id == 2:
-            tag['v'] = sample_tag.int_value
-        elif sample_tag.tag_type.id == 3:
-            tag['v'] = sample_tag.float_value
-        else:
-            tag['v'] = sample_tag.str_value
-            
-        ret.append(tag)
+
         
 def _tags_to_str(sample_tags):
     ret = '' #tag:value\n'
@@ -205,15 +191,17 @@ def _tags_callback(key, person, user_type, id_map={}):
         str(records),
         f]) # needs to be unique
         
-    data = cache.get(cache_key) # returns None if no key-value pair
+    data = None #cache.get(cache_key) # returns None if no key-value pair
     
     # shortcut and return cached copy
     if data is None:
         #if f == 'text':
         #    data = HttpResponse(_json_to_str(Sample.objects.filter(id=sample)), content_type='text/plain; charset=utf8')
         #else:
-        rows = SampleTag.objects.filter(id=sample).values('json')
-    
+        rows = Sample.objects.filter(id=sample).values('json')
+        
+        print(rows)
+        
         #paginator = Paginator(rows, records)
     
         #print(tags.values('data')[0]['data'][0]['id'])
