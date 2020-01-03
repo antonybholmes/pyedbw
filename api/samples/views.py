@@ -200,7 +200,7 @@ def _tags_callback(key, person, user_type, id_map={}):
         #else:
         rows = Sample.objects.filter(id=sample).values('json')
         
-        print(rows)
+        #print(rows)
         
         #paginator = Paginator(rows, records)
     
