@@ -15,6 +15,7 @@ import libseq
 import libdna
 import libhttp
 import libhttpdna
+import s3fs
 
 from api.samples.models import SampleFile
 from api.vfs.models import VFSFile
@@ -116,18 +117,20 @@ def mapped_callback(key, person, user_type, id_map={}):
     #    return JsonResponse(['p ' + str(bin_width)], safe=False)
         
     #power = libseq.POWER[bin_width]
+    
+    fs = s3fs.S3FileSystem(anon=True)
         
     sub_dir = sub_dirs[0].path
         
-    file = settings.DATA_DIR + sub_dir + '/reads.{}.{}.bc'.format(genome, mode) #'/mapped_reads_count.txt' #os.path.join(settings.SEQ_DIR, sub_dir) #str(id))
+    file = settings.AWS_BUCKET + sub_dir + '/reads.{}.{}.bc'.format(genome, mode) #'/mapped_reads_count.txt' #os.path.join(settings.SEQ_DIR, sub_dir) #str(id))
     
+    #print(file)
     
-    
-    if os.path.isfile(file):
+    if fs.isfile(file):
         #f = open(file, 'r')
         #count = int(f.readline().strip())
         #f.close()
-        f = open(file, 'rb')
+        f = fs.open(file, 'rb')
         count = struct.unpack('>I', f.read(4))[0] #int(f.readline().strip())
         f.close()
     else:
