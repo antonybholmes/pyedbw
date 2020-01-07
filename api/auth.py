@@ -87,6 +87,7 @@ def auth(request,
     user = apikeys[0].user
     user_type = get_user_type(user)
     
+
         # If there is a person send it to the callback
     return callback(key, user, user_type, id_map=id_map)
 
