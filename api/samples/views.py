@@ -9,18 +9,26 @@ from django.core import serializers
 from django.core.paginator import Paginator
 from api.models import Tag
 from api.persons.models import Person
-from api.persons.serializers import PersonSerializer
+from login.serializers import UserSerializer
 from api.vfs.models import VFSFile
 from api.vfs.serializers import VFSFileSerializer
 from api.samples.models import Sample, Set, TagSampleSearch, TagKeywordSearch, SampleFile, SampleTag #, SampleIntTag, SampleFloatTag
 from api.samples.serializers import SampleSerializer, SetSerializer #, SampleTagSerializer
 from api import auth, libsearch, libcollections, views
 from edbw import settings
+from login.models import User
+
 import libhttp
 import collections
 
+def _get_page_response(serializer, page=0, paginator=None):
+    if page > 0:
+        return JsonResponse({'page':page, 'pages':paginator.num_pages, 'samples':serializer.data}, safe=False)
+    else:
+        # The old style of response which is just a list of results
+        return JsonResponse(serializer.data, safe=False)
   
-def _sample_callback(key, person, user_type, id_map={}):
+def _sample_callback(key, user, user_type, id_map={}):
     if 'page' in id_map:
         page = id_map['page']
     else:
@@ -34,7 +42,7 @@ def _sample_callback(key, person, user_type, id_map={}):
         if user_type != 'Normal':
             rows = Sample.objects.filter(id__in=ids)
         else:
-            rows = Sample.objects.filter(groups__person__id=person.id, id__in=ids).distinct()
+            rows = Sample.objects.filter(groups__user__id=user.id, id__in=ids).distinct()
     else:
         # return all samples
         
@@ -42,7 +50,7 @@ def _sample_callback(key, person, user_type, id_map={}):
             rows = Sample.objects.all()
         else:
             # Normal users are filtered by the groups they belong to
-            rows = Sample.objects.filter(groups__person__id=person.id)
+            rows = Sample.objects.filter(groups__user__id=user.id)
     
     rows = rows.order_by('name')
     
@@ -52,17 +60,16 @@ def _sample_callback(key, person, user_type, id_map={}):
     
     serializer = SampleSerializer(page_rows, many=True, read_only=True)
     
-    if 'page' in id_map:
-        return JsonResponse({'page':page, 'pages':paginator.num_pages, 'samples':serializer.data}, safe=False)
-    else:
-        # The old style of response which is just a list of results
-        return JsonResponse(serializer.data, safe=False)
+    data = _get_page_response(serializer, 
+                              page=page if 'page' in id_map else 0, 
+                              paginator=paginator)
+    
+    return data
 
 
 def samples(request):
     print('samples')
  
-    
     id_map = libhttp.ArgParser() \
         .add('key') \
         .add('sample', None, int, multiple=True) \
@@ -72,11 +79,10 @@ def samples(request):
         
     #id_map = auth.parse_ids(request, 'sample')
     
-    
     return auth.auth(request, _sample_callback, id_map=id_map)
 
 
-def _persons_callback(key, person, user_type, id_map={}):
+def _users_callback(key, user, user_type, id_map={}):
     if 'page' in id_map:
         page = id_map['page']
     else:
@@ -84,22 +90,22 @@ def _persons_callback(key, person, user_type, id_map={}):
     
     records = min(id_map['records'], settings.MAX_RECORDS_PER_PAGE)
     
-    rows = Person.objects.filter(sampleperson__sample__in=id_map['sample'])
+    rows = User.objects.filter(sampleuser__sample__in=id_map['sample'])
     
     paginator = Paginator(rows, records)
     
     page_rows = paginator.get_page(page)
     
-    serializer = PersonSerializer(page_rows, many=True, read_only=True)
+    serializer = UserSerializer(page_rows, many=True, read_only=True)
     
-    if 'page' in id_map:
-        return JsonResponse({'page':page, 'pages':paginator.num_pages, 'persons':serializer.data}, safe=False)
-    else:
-        # The old style of response which is just a list of results
-        return JsonResponse(serializer.data, safe=False)
+    data = _get_page_response(serializer, 
+                              page=page if 'page' in id_map else 0, 
+                              paginator=paginator)
+    
+    return data
 
 
-def persons(request):
+def users(request):
     id_map = libhttp.ArgParser() \
         .add('key') \
         .add('sample', None, int, multiple=True) \
@@ -107,10 +113,13 @@ def persons(request):
         .add('records', default_value=settings.DEFAULT_RECORDS) \
         .parse(request)
     
-    return auth.auth(request, _persons_callback, id_map=id_map, check_for={'sample'})
+    return auth.auth(request, _users_callback, id_map=id_map, check_for={'sample'})
+
+def persons(request):
+    return users(request)
     
     
-def _sets_callback(key, person, user_type, id_map={}):
+def _sets_callback(key, user, user_type, id_map={}):
     if 'set' in id_map:
         sets = id_map['set']
         
@@ -175,7 +184,7 @@ def _json_to_str(tags):
     return ret
     
 
-def _tags_callback(key, person, user_type, id_map={}):
+def _tags_callback(key, user, user_type, id_map={}):
     if 'page' in id_map:
         page = id_map['page']
     else:
@@ -191,7 +200,7 @@ def _tags_callback(key, person, user_type, id_map={}):
         str(records),
         f]) # needs to be unique
         
-    data = None #cache.get(cache_key) # returns None if no key-value pair
+    data = cache.get(cache_key) # returns None if no key-value pair
     
     # shortcut and return cached copy
     if data is None:
@@ -231,7 +240,7 @@ def tags(request):
     return auth.auth(request, _tags_callback, id_map=id_map, check_for={'sample'})
        
     
-def geo_callback(key, person, user_type, id_map={}):
+def geo_callback(key, user, user_type, id_map={}):
     return JsonResponse([], safe=False)    
 
 
@@ -241,7 +250,7 @@ def geo(request):
     return auth.auth(request, geo_callback, id_map=id_map)
     
 
-def _file_callback(key, person, user_type, id_map={}):
+def _file_callback(key, user, user_type, id_map={}):
     files = VFSFile.objects.filter(samplefile__sample__in=id_map['sample'])
     
     serializer = VFSFileSerializer(files, many=True, read_only=True)
@@ -255,7 +264,7 @@ def files(request):
     return auth.auth(request, _file_callback, id_map=id_map)
     
     
-def _search_callback(key, person, user_type, id_map={}):
+def _search_callback(key, user, user_type, id_map={}):
     # records per page
     records = min(id_map['records'], settings.MAX_RECORDS_PER_PAGE)
       
@@ -278,10 +287,10 @@ def _search_callback(key, person, user_type, id_map={}):
     else:
         types = []
         
-    if 'person' in id_map:
-        persons = id_map['person']
+    if 'user' in id_map:
+        users = id_map['user']
     else:
-        persons = []
+        users = []
         
     if 'page' in id_map:
         page = id_map['page']
@@ -299,7 +308,7 @@ def _search_callback(key, person, user_type, id_map={}):
         str(records),
         ':'.format(groups), 
         ':'.format(types), 
-        ':'.format(persons),
+        ':'.format(users),
         ':'.format(sets)]) # needs to be unique
         
     data = cache.get(cache_key) # returns None if no key-value pair
@@ -320,14 +329,14 @@ def _search_callback(key, person, user_type, id_map={}):
     if len(types) > 0:
         samples = samples.filter(expression_type_id__in=types)
     
-    if len(persons) > 0:
-        samples = samples.filter(persons__in=persons)
+    if len(users) > 0:
+        samples = samples.filter(users__in=users)
 
     if user_type == 'Normal':
         #print('normal')
          
         # filter what user can see
-        samples = samples.filter(groups__person__id=person.id)
+        samples = samples.filter(groups__user__id=user.id)
     
     if len(sets) > 0:
         set_samples = Sample.objects.filter(sets__in=sets) #.distinct().order_by('name')
@@ -365,14 +374,19 @@ def _search_callback(key, person, user_type, id_map={}):
             
         #serializer = SampleSerializer(page_rows, many=True, read_only=True)
         
-        data = JsonResponse({'page':page, 'pages':paginator.num_pages, 'data':sort_map}, safe=False)
+        data = JsonResponse({'page':page, 
+                             'pages':paginator.num_pages, 
+                             'data':sort_map}, safe=False)
     else:
         serializer = SampleSerializer(page_rows, many=True, read_only=True)
         
         if page > 0:
             # If we use the page param, return results in the new format
             # that include page and pages meta data
-            data = JsonResponse({'page':page, 'pages':paginator.num_pages, 'results':serializer.data, 'size':len(page_rows)}, safe=False)
+            data = JsonResponse({'page':page, 
+                                 'pages':paginator.num_pages, 
+                                 'results':serializer.data, 
+                                 'size':len(page_rows)}, safe=False)
         else:
             # The old style of response which is just a list of results
             data = JsonResponse(serializer.data, safe=False)
@@ -422,7 +436,7 @@ def search(request):
         .add('q', '') \
         .add('tag', '/All') \
         .add('type', arg_type=str, multiple=True) \
-        .add('person', None, int, multiple=True) \
+        .add('user', None, int, multiple=True) \
         .add('g', None, int, multiple=True) \
         .add('group', None, int, multiple=True) \
         .add('set', None, int, multiple=True) \

@@ -13,10 +13,9 @@ class Organism(models.Model):
         
 class Role(models.Model):
     name = models.CharField(max_length=255)
-    created = models.DateTimeField()
 
     class Meta:
-        db_table = 'roles'
+        db_table = 'role'
         
         
 class Genome(models.Model):

@@ -35,16 +35,17 @@ ALLOWED_HOSTS = config['hosts']
 # Application definition
 
 INSTALLED_APPS = [
+    'login',
+    'api',
     'django.contrib.admin',
     'django.contrib.auth',
     'django.contrib.contenttypes',
     'django.contrib.sessions',
     'django.contrib.messages',
     'django.contrib.staticfiles',
-    'api',
 ]
 
-AUTH_USER_MODEL = 'api.User'
+AUTH_USER_MODEL = 'login.User'
 
 MIDDLEWARE = [
     'django.middleware.security.SecurityMiddleware',

@@ -1,4 +1,5 @@
-from api.persons.models import Person
+from login.models import User
+from api.models import APIKey
 from django.http import JsonResponse
 from django.core.exceptions import PermissionDenied
 import re
@@ -8,17 +9,19 @@ EMPTY_JSON_LIST = JsonResponse([], safe=False)
 
 INT_REGEX = re.compile(r'^\d+$')
 FLOAT_REGEX = re.compile(r'^\d+\.\d+$')
+KEY_REGEX = re.compile(r'^[A-Za-z0-9]+$')
 
-def empty_list_callback():
-    """
-    Default error function
-    """
-    raise PermissionDenied #EMPTY_JSON_LIST
+AUTH_ERROR_INVALID_ID = JsonResponse({'success': False, 'error':'Invalid Id.'}, 
+                                     safe=False)
 
+AUTH_ERROR_MALFORMED_API_KEY = JsonResponse({'success': False, 'error':'Malformed key.'}, 
+                                            safe=False)
+
+AUTH_ERROR_INVALID_API_KEY = JsonResponse({'success': False, 'error':'Invalid key.'}, 
+                                          safe=False)
 
 def auth(request, 
          callback, 
-         error_callback=empty_list_callback, 
          id_map=None, 
          check_for=None, 
          pkey_only=True):
@@ -32,9 +35,6 @@ def auth(request,
         API key
     callback : function
         Function to call if key is valid.
-    error_callback : function, optional
-        Function to call if key is invalid. Defaults to returning
-        an empty json list.
     pkey_only : bool, optional
         If set to True (default) will ignore id params that are less
         than 1 since these are not valid database ids
@@ -58,42 +58,37 @@ def auth(request,
         # Attempt to get key from URL
         key = request.GET.get('key', None)
         
-    if key is None:
-        print('no key')
-        return error_callback()
+    if key is None or not KEY_REGEX.match(key):
+        return AUTH_ERROR_MALFORMED_API_KEY
  
-    
     if isinstance(check_for, set):
         for id in check_for:
             if id not in id_map:
-                print(id, 'not found in check_for')
-                return error_callback()
+                return AUTH_ERROR_INVALID_ID
     
     for name, values in id_map.items():
         if isinstance(values, list):
             for id in values:
                 # test all int ids for being valid, ignore strings etc
                 if pkey_only and isinstance(id, int) and id < 1:
-                    return error_callback()
+                    return AUTH_ERROR_INVALID_ID
         elif isinstance(values, int):
             id = values
             if pkey_only and isinstance(id, int) and id < 1:
-                return error_callback()
+                return AUTH_ERROR_INVALID_ID
         else:
             pass
  
-    persons = Person.objects.filter(api_key=key)
+    apikeys = APIKey.objects.filter(key=key)
     
-    if len(persons) > 0:
-        person = persons[0]
-        user_type = get_user_type(person)
+    if len(apikeys) == 0:
+        return AUTH_ERROR_INVALID_API_KEY
+    
+    user = apikeys[0].user
+    user_type = get_user_type(user)
     
         # If there is a person send it to the callback
-        return callback(key, persons[0], user_type, id_map=id_map)
-    else:
-        # return an empty response otherwise
-        print('invalid person')
-        return error_callback()
+    return callback(key, user, user_type, id_map=id_map)
 
 
 def parse_ids(request, *args, **kwargs):
@@ -261,7 +256,7 @@ def param_str_to_int(request, name):
     return [int(x) for x in request.GET.getlist(name) if x.isdigit()]
 
 
-def get_user_type(person):
+def get_user_type(user):
     """
     Determine the user type which can either be 'Superuser',
     'Administator', or 'Normal' in order of status. Most users should
@@ -277,15 +272,10 @@ def get_user_type(person):
     str
         A string representing the user type.
     """
-    
-    s = Person.objects.filter(id=person.id, groups__name='Superuser').exists()
-    
-    if s:
+
+    if user.is_superuser:
         return 'Superuser'
-    
-    s = Person.objects.filter(id=person.id, groups__name='Administrator').exists()
-    
-    if s:
+    elif user.is_staff:
         return 'Administrator'
-    
-    return 'Normal'
+    else:
+        return 'Normal'

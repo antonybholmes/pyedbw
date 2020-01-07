@@ -48,7 +48,6 @@ for row in records:
 
 print('Inserting...')
 cursor.executemany(sql, inserts)
- 
 connection.commit()
 cursor.close()
 connection.close()

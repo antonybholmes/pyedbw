@@ -2,10 +2,13 @@ from django.db import models
 from datetime import datetime
 from api.experiments.models import Experiment
 from api.models import Tag, TagType
-from api.persons.models import Person, GroupPerson
 from api.vfs.models import VFSFile
-from api.groups.models import Group
+import api.groups.models
 from django.contrib.postgres.fields import JSONField
+from django.contrib.auth.models import Group
+from api.types.models import Role
+from login.models import User
+
 
 class Set(models.Model):
     name = models.CharField(max_length=255)
@@ -21,16 +24,19 @@ class Sample(models.Model):
     # We need this to link samples to groups so we can subsequently
     # link persons to groups and transitively, samples to persons via
     # the shared groups they belong to.
-    groups = models.ManyToManyField(Group, through='GroupSample')
-    persons = models.ManyToManyField(Person, through='SamplePerson')
+    #groups = models.ManyToManyField(api.groups.models.Group, through='GroupSample')
+    groups = models.ManyToManyField(Group, through='SampleGroup')
+    #persons = models.ManyToManyField(Person, through='SamplePerson')
+    persons = models.ManyToManyField(User, through='SamplePerson')
     sets = models.ManyToManyField(Set, through='SetSample')
     organism_id = models.IntegerField()
     expression_type_id = models.IntegerField()
     created = models.DateTimeField('%Y-%m-%d')
-    json = JSONField()
+    json = JSONField(default=list)
 
     class Meta:
         db_table = 'samples'
+        
 
 class SampleTag(models.Model):
     sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
@@ -40,7 +46,7 @@ class SampleTag(models.Model):
     int_value = models.IntegerField()
     float_value = models.FloatField()
     created = models.DateTimeField()
-    json = JSONField()
+    json = JSONField(default=list)
     
     class Meta:
         db_table = 'sample_tags'
@@ -70,14 +76,22 @@ class SetSample(models.Model):
     class Meta:
         db_table = 'sets_samples'
         
-        
-class GroupSample(models.Model):
-    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+class SampleGroup(models.Model):
     sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
-    created = models.DateTimeField()
-
+    group = models.ForeignKey(Group, on_delete=models.CASCADE)
+    #created = models.DateTimeField(auto_now=True)
+    
     class Meta:
-        db_table = 'groups_samples'
+        db_table = 'sample_groups'
+
+        
+#class GroupSample(models.Model):
+#    group = models.ForeignKey(api.groups.models.Group, on_delete=models.CASCADE)
+#    sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
+#    created = models.DateTimeField(auto_now=True)
+#
+#    class Meta:
+#        db_table = 'groups_samples'
         
         
 class SampleFile(models.Model):
@@ -88,13 +102,32 @@ class SampleFile(models.Model):
         db_table = 'sample_files'
         
         
+#class SamplePerson(models.Model):
+#    sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
+#    person = models.ForeignKey(Person, on_delete=models.CASCADE)
+#    created = models.DateTimeField()
+#
+#    class Meta:
+#        db_table = 'sample_persons'
+     
+
 class SamplePerson(models.Model):
     sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
-    person = models.ForeignKey(Person, on_delete=models.CASCADE)
-    created = models.DateTimeField()
+    person = models.ForeignKey(User, on_delete=models.CASCADE)
+    role = models.ForeignKey(Role, on_delete=models.CASCADE, default=2)
+    #created = models.DateTimeField(auto_now=True)
 
     class Meta:
         db_table = 'sample_persons'
+        
+        
+#class SampleUser(models.Model):
+#    sample = models.ForeignKey(Sample, on_delete=models.CASCADE)
+#    user = models.ForeignKey(User, on_delete=models.CASCADE)
+#    #created = models.DateTimeField(auto_now=True)
+#
+#    class Meta:
+#        db_table = 'sample_users'
         
         
 #class SampleTag(models.Model):

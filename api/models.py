@@ -3,27 +3,25 @@ from datetime import datetime
 from django.contrib.auth.models import AbstractUser
 from django.contrib.postgres.fields import JSONField  
 
-from api.groups.models import Group
+from login.models import User
 
-class User(AbstractUser):
-    affiliation = models.CharField(max_length=255, default='')
-    phone = models.CharField(max_length=255, default='')
-    address = models.CharField(max_length=255, default='')
-    #groups = models.ManyToManyField(Group, through='UserGroup')
-    json = JSONField(default=list)
-
-class UserGroup(models.Model):
+class APIKey(models.Model):
     user = models.ForeignKey(User, on_delete=models.CASCADE)
-    group = models.ForeignKey(Group, on_delete=models.CASCADE)
-    created = models.DateTimeField()
+    key = models.CharField(max_length=255)
+    
+    class Meta:
+        db_table = 'api_key'
 
-class Key(models.Model):
-    name = models.CharField(max_length=255)
+#class UserAPIKey(models.Model):
+#    user = models.ForeignKey(User, on_delete=models.CASCADE)    
+#    api_key = models.ForeignKey(APIKey, on_delete=models.CASCADE)
+#
+#    class Meta:
+#        db_table = 'api_user_keys'
 
 class Tag(models.Model):
     name = models.CharField(max_length=255)
     alt_name = models.CharField(max_length=255)
-    created = models.DateTimeField()
 
     class Meta:
         db_table = 'tags'
