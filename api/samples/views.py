@@ -90,7 +90,7 @@ def _users_callback(key, user, user_type, id_map={}):
     
     records = min(id_map['records'], settings.MAX_RECORDS_PER_PAGE)
     
-    rows = User.objects.filter(sampleuser__sample__in=id_map['sample'])
+    rows = User.objects.filter(sampleperson__sample__in=id_map['sample'])
     
     paginator = Paginator(rows, records)
     
