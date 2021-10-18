@@ -23,7 +23,7 @@ import collections
 
 def _get_page_response(serializer, page=0, paginator=None):
     if page > 0:
-        return JsonResponse({'page':page, 'pages':paginator.num_pages, 'samples':serializer.data}, safe=False)
+        return JsonResponse({'page':page, 'pages':paginator.num_pages, 'results':serializer.data}, safe=False)
     else:
         # The old style of response which is just a list of results
         return JsonResponse(serializer.data, safe=False)

@@ -149,21 +149,14 @@ DATABASES = {
 
 #CACHES = {
 #    'default': {
-#        'BACKEND': 'django.core.cache.backends.memcached.MemcachedCache',
-#        'LOCATION': '52.20.36.165:11211',
+#        'BACKEND': 'django_redis.cache.RedisCache',
+#        'LOCATION': config['redis']['location'],
+#        'OPTIONS': {
+#            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
+#            'PASSWORD': config['redis']['password'],
+#        }
 #    }
 #}
-
-CACHES = {
-    'default': {
-        'BACKEND': 'django_redis.cache.RedisCache',
-        'LOCATION': config['redis']['location'],
-        'OPTIONS': {
-            'CLIENT_CLASS': 'django_redis.client.DefaultClient',
-            'PASSWORD': config['redis']['password'],
-        }
-    }
-}
 
 
 DATA_DIR = '/home/antony/Desktop/geb_test' #'/ifs/scratch/cancer/Lab_RDF/experiment_store/data'
