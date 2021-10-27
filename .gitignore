@@ -8,3 +8,4 @@ db.sqlite3
 passwords.txt
 *.ini
 *.json
+log/
